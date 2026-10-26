@@ -739,6 +739,32 @@
             color: #ff9a4d; font-weight: 700; font-size: 0.78rem;
         }
 
+        /* Промокоды + канал игры */
+        .promo-row { display: flex; gap: 6px; margin-top: 6px; }
+        .promo-mini {
+            flex: 1; padding: 8px 6px; border-radius: 12px; cursor: pointer; white-space: nowrap;
+            background: rgba(99, 102, 241, 0.10); border: 1px dashed rgba(129, 140, 248, 0.55);
+            color: #a5b4fc; font-weight: 700; font-size: 0.78rem;
+        }
+        .promo-mini.ch { background: rgba(56, 189, 248, 0.10); border-color: rgba(56, 189, 248, 0.55); color: #7dd3fc; }
+        .promo-mini:active { transform: scale(0.97); }
+        .promo-input {
+            width: 100%; box-sizing: border-box; margin: 14px 0 8px; padding: 12px; border-radius: 12px;
+            border: 2px solid rgba(129, 140, 248, 0.5); background: rgba(0, 0, 0, 0.25); color: inherit;
+            font-family: monospace; font-size: 1.15rem; font-weight: bold; letter-spacing: 1.5px; text-align: center;
+            text-transform: uppercase; outline: none;
+        }
+        .promo-input:focus { border-color: #818cf8; }
+        .promo-go {
+            width: 100%; border: none; border-radius: 12px; padding: 12px; cursor: pointer; font-weight: 800; font-size: 0.95rem;
+            color: #fff; background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+        .promo-msg { min-height: 1.1em; font-size: 0.78rem; margin: 8px 0 2px; color: var(--muted); }
+        .promo-msg.err { color: #f87171; font-weight: 700; }
+        .promo-msg.ok { color: #4ade80; font-weight: 700; }
+        .promo-note { font-size: 0.7rem; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+        .promo-link { background: none; border: none; color: #a5b4fc; text-decoration: underline; cursor: pointer; font-size: 0.8rem; padding: 6px; }
+
         /* Донаты ⭐ */
         .donate-link {
             width: 100%; margin-top: 4px; padding: 10px; border-radius: 14px; cursor: pointer;
@@ -873,6 +899,10 @@
         </div>
 
         <button class="donate-link" id="donateOpenBtn" onclick="openDonate()">🛒 Монеты за ⭐ · бонус до +40%</button>
+        <div class="promo-row">
+            <button class="promo-mini" id="promoOpenBtn" onclick="PromoUI.open()">🎟 Промокод</button>
+            <button class="promo-mini ch" id="channelBtn" onclick="PromoUI.openChannel()">📢 Канал игры</button>
+        </div>
         <button class="tm-mini" id="tmMainBtn" onclick="technoShowInShop()">🎁 +1 000 💰 за подписку на Техноманию</button>
     </div>
 
@@ -964,6 +994,23 @@
         </div>
     </div>
 
+    <!-- Promo Code Modal -->
+    <div class="modal-overlay" id="promoModal">
+        <div class="modal" style="text-align:center;">
+            <button class="modal-close" onclick="closeModal('promoModal')">✕</button>
+            <div style="font-size:2.4rem; margin-bottom:4px;">🎟</div>
+            <h2>Промокод</h2>
+            <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 0;">Введи промокод — получишь монеты 💰</p>
+            <input class="promo-input" id="promoInput" type="text" maxlength="32" autocomplete="off" autocorrect="off"
+                   autocapitalize="characters" spellcheck="false" placeholder="NEWYEAR2026"
+                   onkeydown="if (event.key === 'Enter') PromoUI.submit()">
+            <button class="promo-go" id="promoSubmitBtn" onclick="PromoUI.submit()">Активировать</button>
+            <div class="promo-msg" id="promoMsg"></div>
+            <div class="promo-note">Код проверит бот @randomnomerrf_bot и пришлёт кнопку «🎁 Забрать в игре». Каждый промокод — один раз на аккаунт.</div>
+            <button class="promo-link" id="promoChannelLink" onclick="PromoUI.openChannel()">📢 Свежие промокоды — в канале игры</button>
+        </div>
+    </div>
+
     <!-- Donate Modal -->
     <div class="modal-overlay" id="donateModal">
         <div class="modal">
@@ -989,6 +1036,7 @@
                     <div class="tm-done">✅ Получено: +1 000 💰</div>
                 </div>
             </div>
+            <div style="text-align:center;"><button class="promo-link" id="promoShopLink" onclick="closeModal('donateModal'); PromoUI.open();">🎟 Есть промокод?</button></div>
             <div class="donate-note">Монеты зачисляются сразу после оплаты. Они виртуальные, не имеют реальной ценности и возврату не подлежат. Вопросы по оплате — /paysupport в боте, условия — /terms.</div>
             <div id="donateTotal"></div>
             <div class="donate-outside" id="donateOutside">💡 Покупка за звёзды работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
@@ -1371,10 +1419,84 @@
             if (m) m.style.display = done ? 'none' : '';
         }
 
+        /* ===== Промокоды на монеты + ссылка на канал игры =====
+           Сайт статический (нет сервера), поэтому код проверяет бот: «Активировать» открывает
+           t.me/randomnomerrf_bot?start=code_<КОД>; бот проверяет код (существует, не истёк, есть активации,
+           не использован этим аккаунтом, ≤10 неверных попыток в час) и присылает подписанную одноразовую
+           ссылку на монеты {type:'coins', code}, привязанную к uid. Зачисляет её GrantRedeemer. */
+        const PROMO = {
+            bot: 'randomnomerrf_bot',
+            channel: "https://t.me/randomnomer_news",          // bot/channel.json -> dev/build.py; пусто — кнопки канала скрыты
+            channelTitle: "Номерной Рандомайзер | Новости",
+        };
+        const PromoUI = (() => {
+            const CODE_RE = /^[A-Z0-9_-]{3,32}$/;      // start-параметр Telegram: [A-Za-z0-9_-], до 64 символов
+            const CYR = { 'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'У': 'Y', 'Х': 'X' };
+            const normalize = (s) => String(s || '').replace(/\s+/g, '').toUpperCase().replace(/Ё/g, 'Е').replace(/[АВЕКМНОРСТУХ]/g, c => CYR[c]);
+            const link = (code) => `https://t.me/${PROMO.bot}?start=code_${code}`;
+            const el = (id) => document.getElementById(id);
+            const used = () => (profile && Array.isArray(profile.promoCodes)) ? profile.promoCodes : [];
+
+            function setMsg(text, kind) {
+                const m = el('promoMsg');
+                if (!m) return;
+                m.textContent = text || '';
+                m.className = 'promo-msg' + (kind ? ' ' + kind : '');
+            }
+            function open() {
+                const i = el('promoInput');
+                if (i) i.value = '';
+                setMsg('');
+                window.__promoLink = null;
+                openModal('promoModal');
+                TGApp.haptic('light');
+                setTimeout(() => { try { i && i.focus(); } catch (e) {} }, 150);
+            }
+            function validate(raw) {
+                const code = normalize(raw);
+                if (!code) return { error: 'Введи промокод' };
+                if (code.length < 3) return { error: 'Слишком короткий промокод: минимум 3 символа' };
+                if (code.length > 32) return { error: 'Слишком длинный промокод: максимум 32 символа' };
+                if (!CODE_RE.test(code)) return { error: 'В промокоде только латинские буквы, цифры, «_» и «-»' };
+                return { code };
+            }
+            function submit() {
+                const i = el('promoInput');
+                const v = validate(i ? i.value : '');
+                if (v.error) { TGApp.haptic('error'); setMsg(v.error, 'err'); return null; }
+                if (i) i.value = v.code;
+                if (used().includes(v.code)) {
+                    TGApp.haptic('error');
+                    setMsg(`Промокод ${v.code} уже активирован на этом аккаунте`, 'err');
+                    return null;
+                }
+                const url = link(v.code);
+                window.__promoLink = url;
+                TGApp.haptic('select');
+                technoOpen(url);
+                setMsg('Открываем бота… Нажми «🎁 Забрать в игре» в его ответе — монеты сразу зачислятся.', 'ok');
+                return url;
+            }
+            function onRedeemed() {
+                const ov = el('promoModal');
+                if (ov && ov.classList.contains('open')) closeModal('promoModal');
+            }
+            function openChannel() {
+                if (!PROMO.channel) return;
+                TGApp.haptic('light');
+                technoOpen(PROMO.channel);
+            }
+            function render() {
+                ['channelBtn', 'promoChannelLink'].forEach(id => { const b = el(id); if (b) b.style.display = PROMO.channel ? '' : 'none'; });
+            }
+            return { open, submit, validate, normalize, link, onRedeemed, openChannel, render };
+        })();
+
         const GrantRedeemer = (() => {
             const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
             const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
-            const MAX_NUMBERS = 20, MAX_REDEEMED = 500, MAX_COINS = 10000000;
+            const MAX_NUMBERS = 20, MAX_REDEEMED = 500, MAX_COINS = 10000000, MAX_PROMO = 200;
+            const PROMO_CODE_RE = /^[A-Z0-9_-]{3,32}$/;
 
             function b64ToBytes(s) {
                 s = String(s).replace(/-/g, '+').replace(/_/g, '/');
@@ -1423,6 +1545,9 @@
                         // подарок монетами: {v, uid, type:'coins', coins, nonce, ts}
                         if (!Number.isSafeInteger(p.coins) || p.coins <= 0 || p.coins > MAX_COINS || 'numbers' in p) return { ok: false, reason: 'bad' };
                         if ('kind' in p && p.kind !== 'sub') return { ok: false, reason: 'bad' };    // kind:'sub' — бонус за подписку на Техноманию
+                        if ('code' in p && ('kind' in p || typeof p.code !== 'string' || !PROMO_CODE_RE.test(p.code))) return { ok: false, reason: 'bad' };   // code — активированный промокод
+                    } else if ('code' in p) {
+                        return { ok: false, reason: 'bad' };
                     } else if (p.type !== undefined || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
                         return { ok: false, reason: 'bad' };
                     }
@@ -1472,8 +1597,9 @@
                 openModal('grantModal');
             }
 
-            function showCoinsModal(amount, kind) {
+            function showCoinsModal(amount, kind, code) {
                 const sub = kind === 'sub';
+                const promo = !sub && !!code;
                 let ov = document.getElementById('grantModal');
                 if (!ov) {
                     ov = document.createElement('div');
@@ -1485,9 +1611,9 @@
                     <div class="modal" style="text-align:center;">
                         <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
                         <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
-                        <h2>${sub ? 'Спасибо за подписку!' : 'Вам выданы монеты!'}</h2>
+                        <h2>${sub ? 'Спасибо за подписку!' : promo ? 'Промокод активирован!' : 'Вам выданы монеты!'}</h2>
                         <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
-                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : promo ? `Промокод <b>${escapeHtml(code)}</b>.` : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
                         <button onclick="closeModal('grantModal')" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
                     </div>`;
                 openModal('grantModal');
@@ -1499,6 +1625,15 @@
                 if (!was) profile.subBonus = { ts: Date.now(), nonce: p.nonce };
                 try { renderTechno(); } catch (e) {}
                 return !was;
+            }
+
+            function markPromo(p) {
+                if (!p.code) return false;
+                if (!Array.isArray(profile.promoCodes)) profile.promoCodes = [];
+                if (profile.promoCodes.includes(p.code)) return false;
+                profile.promoCodes.push(p.code);
+                if (profile.promoCodes.length > MAX_PROMO) profile.promoCodes.splice(0, profile.promoCodes.length - MAX_PROMO);
+                return true;
             }
 
             function redeemedList() {
@@ -1535,7 +1670,8 @@
                 const list = redeemedList();
                 if (list.includes(p.nonce)) {
                     clearToken();
-                    if (markSub(p)) { saveData(); TGApp.saveNow(); }
+                    if (markSub(p) | markPromo(p)) { saveData(); TGApp.saveNow(); }
+                    if (p.code) { showToast('Этот промокод уже активирован — монеты на балансе', '🎟'); return done('already', { code: p.code }); }
                     showToast(p.type === 'coins' ? 'Этот подарок уже получен — монеты на балансе' : 'Этот подарок уже получен — номера в инвентаре', p.type === 'coins' ? '💰' : '📦');
                     return done('already');
                 }
@@ -1543,6 +1679,7 @@
                     // зачисление как у покупки монет (creditPack): баланс -> localStorage -> CloudStorage сразу
                     coins += p.coins;
                     markSub(p);
+                    markPromo(p);
                     list.push(p.nonce);
                     if (list.length > MAX_REDEEMED) list.splice(0, list.length - MAX_REDEEMED);
                     updateCoinsDisplay();
@@ -1552,9 +1689,11 @@
                     try { checkAchievements(); } catch (e) {}
                     TGApp.haptic('success');
                     try { AudioFX.playWin(false); } catch (e) {}
-                    showCoinsModal(p.coins, p.kind);
-                    showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — ${p.kind === 'sub' ? 'бонус за подписку на Техноманию!' : 'подарок от администрации!'}`, '🎁');
-                    return done('ok', { coins: p.coins, kind: p.kind || null });
+                    showCoinsModal(p.coins, p.kind, p.code);
+                    if (p.code) showToast(`Промокод активирован: +${p.coins.toLocaleString('ru-RU')} монет`, '🎟');
+                    else showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — ${p.kind === 'sub' ? 'бонус за подписку на Техноманию!' : 'подарок от администрации!'}`, '🎁');
+                    try { if (p.code && typeof PromoUI !== 'undefined') PromoUI.onRedeemed(p.code); } catch (e) {}
+                    return done('ok', { coins: p.coins, kind: p.kind || null, code: p.code || null });
                 }
                 const plates = p.numbers.map(makePlate);
                 inventory.unshift(...plates);       // подарок кладём даже сверх лимита 120
@@ -1824,6 +1963,7 @@
             loadData();
             generatePlate(true);
             renderTechno();
+            PromoUI.render();
             TGApp.boot();
         };
 
