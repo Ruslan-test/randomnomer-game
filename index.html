@@ -707,6 +707,38 @@
             .top-bar { flex-wrap: wrap; gap: 8px; }
         }
 
+        /* Реклама: ТЕХНОМАНИЯ (фирменные цвета: #e3084a -> #ff7800, #f0580a, #161414) */
+        .tm-card {
+            margin: 4px 0 14px; padding: 14px; border-radius: 16px; background: #fff; color: #161414;
+            box-shadow: 0 6px 18px rgba(240, 88, 10, 0.25); position: relative; text-align: left;
+        }
+        .tm-ad { position: absolute; top: 8px; right: 10px; font-size: 0.6rem; color: #8a817a; font-weight: 600; }
+        .tm-head { display: flex; align-items: center; gap: 10px; }
+        .tm-logo { width: 44px; height: 44px; flex: none; }
+        .tm-word { font-weight: 900; font-size: 1.15rem; letter-spacing: 0.5px; line-height: 1.1; color: #161414; }
+        .tm-word span { color: #f0580a; }
+        .tm-tag { font-size: 0.55rem; font-weight: 700; letter-spacing: 1.6px; color: #3a3330; margin-top: 2px; }
+        .tm-text { font-size: 0.8rem; line-height: 1.4; margin: 10px 0; color: #2a2522; font-weight: 600; }
+        .tm-btn {
+            width: 100%; border: none; border-radius: 12px; padding: 10px 8px; cursor: pointer;
+            font-weight: 800; font-size: 0.85rem; color: #fff;
+            background: linear-gradient(135deg, #e3084a, #ff7800); box-shadow: 0 3px 10px rgba(227, 8, 74, 0.3);
+        }
+        .tm-btn:active { transform: scale(0.97); }
+        .tm-btn.ghost { background: #fff; color: #e3084a; border: 2px solid #e3084a; box-shadow: none; }
+        .tm-bonus { margin-top: 12px; padding: 10px; border-radius: 12px; background: #fff4ec; border: 1px dashed #f0580a; }
+        .tm-bonus-title { font-weight: 800; font-size: 0.85rem; margin-bottom: 8px; color: #161414; }
+        .tm-bonus-note { font-size: 0.65rem; color: #6e645c; margin-top: 6px; }
+        .tm-bonus-row { display: flex; gap: 8px; }
+        .tm-done { display: none; font-weight: 800; color: #0f9d58; font-size: 0.9rem; }
+        .tm-bonus.claimed .tm-bonus-row, .tm-bonus.claimed .tm-bonus-note { display: none; }
+        .tm-bonus.claimed .tm-done { display: block; }
+        .tm-mini {
+            width: 100%; margin-top: 6px; padding: 8px; border-radius: 12px; cursor: pointer;
+            background: rgba(240, 88, 10, 0.08); border: 1px dashed rgba(240, 88, 10, 0.5);
+            color: #ff9a4d; font-weight: 700; font-size: 0.78rem;
+        }
+
         /* Донаты ⭐ */
         .donate-link {
             width: 100%; margin-top: 4px; padding: 10px; border-radius: 14px; cursor: pointer;
@@ -841,6 +873,7 @@
         </div>
 
         <button class="donate-link" id="donateOpenBtn" onclick="openDonate()">🛒 Монеты за ⭐ · бонус до +40%</button>
+        <button class="tm-mini" id="tmMainBtn" onclick="technoShowInShop()">🎁 +1 000 💰 за подписку на Техноманию</button>
     </div>
 
     <!-- Modals -->
@@ -938,6 +971,24 @@
             <h2>🛒 Магазин монет</h2>
             <p class="donate-note" style="margin-top:8px;">Пополни баланс за звёзды Telegram и поддержи разработку. Чем больше пакет — тем выгоднее курс. К любой покупке — значок «⭐ Спонсор» в профиле.</p>
             <div class="donate-grid" id="donateGrid"></div>
+            <div class="tm-card" id="tmCard">
+                <span class="tm-ad">Реклама</span>
+                <div class="tm-head">
+                    <img class="tm-logo" src="data:image/png;base64,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" alt="ТМ" width="44" height="44">
+                    <div><div class="tm-word">ТЕХНО<span>МАНИЯ</span></div><div class="tm-tag">МАГАЗИН БЫТОВОЙ ТЕХНИКИ</div></div>
+                </div>
+                <div class="tm-text">Новая техника с официальной гарантией • Глинки 70Д</div>
+                <button class="tm-btn" id="tmChannelBtn" onclick="technoChannel()">📣 Перейти в канал</button>
+                <div class="tm-bonus" id="tmBonus">
+                    <div class="tm-bonus-title">🎁 +1 000 монет за подписку на Техноманию</div>
+                    <div class="tm-bonus-row">
+                        <button class="tm-btn ghost" id="tmSubBtn" onclick="technoSubscribe()">Подписаться</button>
+                        <button class="tm-btn" id="tmCheckBtn" onclick="technoCheck()">Проверить и получить</button>
+                    </div>
+                    <div class="tm-bonus-note">Подпишись, затем нажми «Проверить» — бот пришлёт монеты. Один раз на аккаунт.</div>
+                    <div class="tm-done">✅ Получено: +1 000 💰</div>
+                </div>
+            </div>
             <div class="donate-note">Монеты зачисляются сразу после оплаты. Они виртуальные, не имеют реальной ценности и возврату не подлежат. Вопросы по оплате — /paysupport в боте, условия — /terms.</div>
             <div id="donateTotal"></div>
             <div class="donate-outside" id="donateOutside">💡 Покупка за звёзды работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
@@ -1068,6 +1119,7 @@
             function refreshUI() {
                 updateCoinsDisplay(); updateLuckUI(); updateInvCounter(); updateRegionLabel();
                 updateFrameUI(); updatePaidFeaturesUI(); renderPlateCard(currentPlate);
+                if (typeof renderTechno === 'function') renderTechno();
             }
 
             /* ---- Telegram CloudStorage (chunked, double-buffered: slot a / b) ---- */
@@ -1236,6 +1288,7 @@
             const outside = document.getElementById('donateOutside');
             if (outside) outside.style.display = TGApp.canPay() ? 'none' : 'block';
             renderSponsorBadge();
+            renderTechno();
             openModal('donateModal');
             TGApp.haptic('select');
         }
@@ -1282,6 +1335,42 @@
            Бот подписывает {v, uid, numbers, nonce, ts} ключом ECDSA P-256 (приватный ключ только на сервере бота),
            ссылка: WEBAPP_URL?g=<base64url(payload)>.<base64url(подпись r||s)>.
            Здесь: проверка подписи открытым ключом, uid === пользователь Telegram, nonce ещё не использован. */
+        /* ===== Реклама: магазин «ТЕХНОМАНИЯ» (t.me/tehnomania1) + бонус за подписку =====
+           «Подписаться» -> канал; «Проверить и получить» -> бот /start sub: бот проверяет подписку (getChatMember)
+           и присылает разовую подписанную ссылку на монеты с kind:'sub'. Флаг profile.subBonus ставит GrantRedeemer. */
+        const TECHNO = {
+            channel: 'https://t.me/tehnomania1',
+            checkLink: 'https://t.me/randomnomerrf_bot?start=sub',
+            bonus: 1000,
+        };
+
+        function technoOpen(url) {
+            const WA = window.Telegram && window.Telegram.WebApp;
+            try {
+                if (TGApp.inTG && WA && typeof WA.openTelegramLink === 'function') { WA.openTelegramLink(url); return; }
+            } catch (e) {}
+            try { window.open(url, '_blank', 'noopener'); } catch (e) {}
+        }
+        function technoClaimed() { return !!(profile && profile.subBonus); }
+        function technoChannel() { TGApp.haptic('light'); technoOpen(TECHNO.channel); }
+        function technoSubscribe() { TGApp.haptic('light'); technoOpen(TECHNO.channel); }
+        function technoCheck() {
+            if (technoClaimed()) { showToast('Бонус за подписку уже получен', '✅'); return; }
+            TGApp.haptic('select');
+            technoOpen(TECHNO.checkLink);
+        }
+        function technoShowInShop() {
+            openDonate();
+            setTimeout(() => { const c = document.getElementById('tmCard'); if (c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 250);
+        }
+        function renderTechno() {
+            const done = technoClaimed();
+            const b = document.getElementById('tmBonus');
+            if (b) b.classList.toggle('claimed', done);
+            const m = document.getElementById('tmMainBtn');
+            if (m) m.style.display = done ? 'none' : '';
+        }
+
         const GrantRedeemer = (() => {
             const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
             const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
@@ -1333,6 +1422,7 @@
                     if (p.type === 'coins') {
                         // подарок монетами: {v, uid, type:'coins', coins, nonce, ts}
                         if (!Number.isSafeInteger(p.coins) || p.coins <= 0 || p.coins > MAX_COINS || 'numbers' in p) return { ok: false, reason: 'bad' };
+                        if ('kind' in p && p.kind !== 'sub') return { ok: false, reason: 'bad' };    // kind:'sub' — бонус за подписку на Техноманию
                     } else if (p.type !== undefined || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
                         return { ok: false, reason: 'bad' };
                     }
@@ -1382,7 +1472,8 @@
                 openModal('grantModal');
             }
 
-            function showCoinsModal(amount) {
+            function showCoinsModal(amount, kind) {
+                const sub = kind === 'sub';
                 let ov = document.getElementById('grantModal');
                 if (!ov) {
                     ov = document.createElement('div');
@@ -1394,12 +1485,20 @@
                     <div class="modal" style="text-align:center;">
                         <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
                         <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
-                        <h2>Вам выданы монеты!</h2>
+                        <h2>${sub ? 'Спасибо за подписку!' : 'Вам выданы монеты!'}</h2>
                         <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
-                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">Подарок от администрации «Номерного Рандомайзера». Монеты уже на вашем балансе.</p>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
                         <button onclick="closeModal('grantModal')" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
                     </div>`;
                 openModal('grantModal');
+            }
+
+            function markSub(p) {
+                if (p.kind !== 'sub') return false;
+                const was = !!profile.subBonus;
+                if (!was) profile.subBonus = { ts: Date.now(), nonce: p.nonce };
+                try { renderTechno(); } catch (e) {}
+                return !was;
             }
 
             function redeemedList() {
@@ -1436,12 +1535,14 @@
                 const list = redeemedList();
                 if (list.includes(p.nonce)) {
                     clearToken();
+                    if (markSub(p)) { saveData(); TGApp.saveNow(); }
                     showToast(p.type === 'coins' ? 'Этот подарок уже получен — монеты на балансе' : 'Этот подарок уже получен — номера в инвентаре', p.type === 'coins' ? '💰' : '📦');
                     return done('already');
                 }
                 if (p.type === 'coins') {
                     // зачисление как у покупки монет (creditPack): баланс -> localStorage -> CloudStorage сразу
                     coins += p.coins;
+                    markSub(p);
                     list.push(p.nonce);
                     if (list.length > MAX_REDEEMED) list.splice(0, list.length - MAX_REDEEMED);
                     updateCoinsDisplay();
@@ -1451,9 +1552,9 @@
                     try { checkAchievements(); } catch (e) {}
                     TGApp.haptic('success');
                     try { AudioFX.playWin(false); } catch (e) {}
-                    showCoinsModal(p.coins);
-                    showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — подарок от администрации!`, '🎁');
-                    return done('ok', { coins: p.coins });
+                    showCoinsModal(p.coins, p.kind);
+                    showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — ${p.kind === 'sub' ? 'бонус за подписку на Техноманию!' : 'подарок от администрации!'}`, '🎁');
+                    return done('ok', { coins: p.coins, kind: p.kind || null });
                 }
                 const plates = p.numbers.map(makePlate);
                 inventory.unshift(...plates);       // подарок кладём даже сверх лимита 120
@@ -1722,6 +1823,7 @@
         window.onload = function() {
             loadData();
             generatePlate(true);
+            renderTechno();
             TGApp.boot();
         };
 
