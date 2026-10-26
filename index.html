@@ -1041,7 +1041,8 @@
             /* ---- state (de)serialisation, same fields as the original save ---- */
             function getState() {
                 return { coins, luck, activeRegion, unlockedRegions, inventory, profile, achievements,
-                         activeFrame, autoRollUnlocked, autoSellUnlocked, autoSellSettings, autoSellActive };
+                         activeFrame, autoRollUnlocked, autoSellUnlocked, autoSellSettings, autoSellActive,
+                         history: historyPack() };
             }
             function applyState(s) {
                 if (!s || typeof s !== 'object') return;
@@ -1062,6 +1063,7 @@
                 autoSellUnlocked = !!s.autoSellUnlocked;
                 if (s.autoSellSettings && typeof s.autoSellSettings === 'object') autoSellSettings = s.autoSellSettings;
                 autoSellActive = !!s.autoSellActive;
+                if (Array.isArray(s.history)) setHistoryFromSave(s.history);   // старые сохранения без истории её не стирают
             }
             function refreshUI() {
                 updateCoinsDisplay(); updateLuckUI(); updateInvCounter(); updateRegionLabel();
@@ -1632,6 +1634,39 @@
         let unlockedRegions = ['RANDOM'];
         let inventory = [];
         let history = [];
+        /* История: хранится компактно [fullText, sold 0/1, sellCoins], максимум HISTORY_MAX записей, новые первыми.
+           val пересчитывается estimateValue по номеру; sellCoins храним, т.к. у обычных номеров цена случайная. */
+        const HISTORY_MAX = 20;
+        const HISTORY_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) ([0-9A-Z]{2,6})$/;
+        function historyPack() {
+            return history.slice(0, HISTORY_MAX).map(p => [p.fullText, p.sold ? 1 : 0, p.val ? p.val.sellCoins : 0]);
+        }
+        function historyUnpack(arr) {
+            const out = [];
+            if (!Array.isArray(arr)) return out;
+            for (const e of arr) {
+                if (out.length >= HISTORY_MAX) break;
+                try {
+                    const t = Array.isArray(e) ? e[0] : (e && e.fullText);
+                    const m = HISTORY_RE.exec(String(t || ''));
+                    if (!m) continue;
+                    const [, l1, d, l2, l3, region] = m;
+                    const val = estimateValue(l1, d, l2, l3, region);
+                    const sc = Array.isArray(e) ? e[2] : (e.val && e.val.sellCoins);
+                    if (Number.isFinite(sc) && sc > 0) {
+                        val.sellCoins = sc;
+                        if (!val.isRare && !val.isEpic && !val.isLegend) val.realPriceRub = sc * 500;
+                    }
+                    out.push({
+                        id: 'plate_h' + out.length + '_' + Math.random().toString(36).substr(2, 4),
+                        mainText: `${l1} ${d} ${l2}${l3}`, region, fullText: `${l1}${d}${l2}${l3} ${region}`,
+                        val, sold: !!(Array.isArray(e) ? e[1] : e.sold),
+                    });
+                } catch (err) {}
+            }
+            return out;
+        }
+        function setHistoryFromSave(arr) { history = historyUnpack(arr); renderHistory(); }
         let currentPlate = null;
         let isRolling = false;
 
@@ -1705,6 +1740,7 @@
                 localStorage.setItem('plateAutoSellUnlocked_v3', JSON.stringify(autoSellUnlocked));
                 localStorage.setItem('plateAutoSellSettings_v3', JSON.stringify(autoSellSettings));
                 localStorage.setItem('plateAutoSellActive_v3', JSON.stringify(autoSellActive));
+                localStorage.setItem('plateHistory_v3', JSON.stringify(historyPack()));
                 localStorage.setItem('plateMeta_v3', JSON.stringify({ ts: Date.now(), uid: TGApp.userId() }));
             } catch(e){}
             TGApp.scheduleCloudSave();
@@ -1743,7 +1779,10 @@
                 if (ass) autoSellSettings = JSON.parse(ass);
                 const asa = localStorage.getItem('plateAutoSellActive_v3');
                 if (asa) autoSellActive = JSON.parse(asa);
+                const hs = localStorage.getItem('plateHistory_v3');
+                if (hs) history = historyUnpack(JSON.parse(hs));
             } catch(e){}
+            renderHistory();
 
             updateCoinsDisplay();
             updateLuckUI();
@@ -2354,7 +2393,7 @@
 
             if (!isInitial) {
                 history.unshift(currentPlate);
-                if (history.length > 25) history.pop();
+                if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;   // старые удаляются автоматически
                 renderHistory();
                 saveData();
             }
