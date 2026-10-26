@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta name="x-build" content="beta-1">
+    <meta name="x-build" content="beta-2">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -884,11 +884,6 @@
             width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px #0d0f17;
         }
         .tab-btn.has-dot .tab-dot { display: block; }
-        .beta-tag {
-            position: absolute; top: -9px; right: 8px; pointer-events: none;
-            font-size: 0.55rem; font-weight: 900; letter-spacing: 0.5px; padding: 1px 6px; border-radius: 6px;
-            background: #f59e0b; color: #1c1305; opacity: 0.9;
-        }
         .toast {
             bottom: calc(var(--tabbar-h) + 14px + var(--safe-bottom));
             transform: translateX(-50%) translateY(calc(var(--tabbar-h) + 140px + var(--safe-bottom)));
@@ -900,6 +895,12 @@
             #tab-game .controls { gap: 7px; }
             .container { gap: 10px; padding-top: 12px; padding-bottom: 12px; }
             .tab-panel { gap: 10px; }
+        }
+
+        .beta-tag {
+            position: absolute; top: -9px; right: 8px; pointer-events: none;
+            font-size: 0.55rem; font-weight: 900; letter-spacing: 0.5px; padding: 1px 6px; border-radius: 6px;
+            background: #f59e0b; color: #1c1305; opacity: 0.9;
         }
     </style>
 </head>
@@ -1072,7 +1073,7 @@
             <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
-            <span class="beta-tag" id="betaTag">ТЕСТ · b1</span>
+            <span class="beta-tag" id="betaTag">ТЕСТ · b2</span>
         </div>
     </nav>
 
@@ -1322,7 +1323,10 @@
             function saveNow() { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); }
             function startParam() {
                 const sp = inTG && WA.initDataUnsafe && WA.initDataUnsafe.start_param;
-                return sp || (location.hash || '').replace('#', '') || null;
+                let q = null;
+                try { const u = new URLSearchParams(location.search); q = u.get('tgWebAppStartParam') || u.get('tab'); } catch (e) {}
+                const h = (location.hash || '').replace('#', '').split('&')[0];
+                return sp || q || (h && h.indexOf('=') < 0 ? h : '') || null;
             }
             function flush() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); } }
 
@@ -1364,7 +1368,7 @@
                 // block pinch-zoom gestures on iOS
                 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
-                if (!inTG) { hideBoot(); if (startParam() === 'shop' && typeof openDonate === 'function') openDonate(); if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400); return; }
+                if (!inTG) { hideBoot(); TabBar.deepLink(startParam()); if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400); return; }
 
                 try { WA.ready(); WA.expand(); } catch (e) {}
                 if (ver('7.7') && WA.disableVerticalSwipes) { try { WA.disableVerticalSwipes(); } catch (e) {} }
@@ -1398,7 +1402,7 @@
                 }
                 hideBoot();
                 greet();
-                if (startParam() === 'shop' && typeof openDonate === 'function') setTimeout(openDonate, 300);
+                setTimeout(() => TabBar.deepLink(startParam()), 300);
                 if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400);
             }
 
@@ -1460,7 +1464,19 @@
                 const WA = window.Telegram && window.Telegram.WebApp;
                 try { if (WA && WA.onEvent) { WA.onEvent('safeAreaChanged', syncSafeArea); WA.onEvent('contentSafeAreaChanged', syncSafeArea); } } catch (e) {}
             }
-            return { show, go, current, badge, init };
+            // Открыть нужную вкладку по ссылке: startapp=bonus, ?tab=bonus или #bonus (shop/bonus/promo/history/profile/game)
+            const LINK_TABS = ['game', 'history', 'shop', 'bonus', 'profile'];
+            function deepLink(p) {
+                p = String(p || '').toLowerCase();
+                if (!p) return null;
+                try {
+                    if (p === 'shop' && typeof openDonate === 'function') { openDonate(); return 'shop'; }
+                    if (p === 'promo') { show('bonus'); if (typeof PromoUI !== 'undefined') PromoUI.open(); return 'promo'; }
+                    if (LINK_TABS.indexOf(p) >= 0) { show(p); return p; }
+                } catch (e) {}
+                return null;
+            }
+            return { show, go, current, badge, init, deepLink };
         })();
         /* ===== Магазин монет за Telegram Stars ===== */
         const COIN_PACKS = [{"stars": 10, "coins": 1200, "bonus": 0, "hit": false, "link": "https://t.me/$Ugnq2T1o-Fb1BAAA9UwTD4TfXck"}, {"stars": 50, "coins": 6600, "bonus": 10, "hit": false, "link": "https://t.me/$_0oRvT1o-Fb2BAAAH0FIjoyqPq0"}, {"stars": 100, "coins": 14400, "bonus": 20, "hit": true, "link": "https://t.me/$T59n0D1o-Fb3BAAApJ42BwWSgHc"}, {"stars": 250, "coins": 39000, "bonus": 30, "hit": false, "link": "https://t.me/$wleZsD1o-Fb4BAAAEWYxyoSJrP0"}, {"stars": 500, "coins": 84000, "bonus": 40, "hit": false, "link": "https://t.me/$DKyN9j1o-Fb5BAAA759ogh4cKoE"}];   // [{stars, coins, bonus, hit, link}]
