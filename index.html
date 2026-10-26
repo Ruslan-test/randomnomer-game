@@ -1158,7 +1158,7 @@
                 // block pinch-zoom gestures on iOS
                 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
-                if (!inTG) { hideBoot(); if (startParam() === 'shop' && typeof openDonate === 'function') openDonate(); return; }
+                if (!inTG) { hideBoot(); if (startParam() === 'shop' && typeof openDonate === 'function') openDonate(); if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400); return; }
 
                 try { WA.ready(); WA.expand(); } catch (e) {}
                 if (ver('7.7') && WA.disableVerticalSwipes) { try { WA.disableVerticalSwipes(); } catch (e) {} }
@@ -1193,9 +1193,11 @@
                 hideBoot();
                 greet();
                 if (startParam() === 'shop' && typeof openDonate === 'function') setTimeout(openDonate, 300);
+                if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400);
             }
 
-            return { inTG, userId, haptic, setClosingConfirmation, scheduleCloudSave, boot, canPay, openInvoice, saveNow };
+            function cloudReady() { return !cloudOK() || !cloudBlocked; }
+            return { inTG, userId, haptic, setClosingConfirmation, scheduleCloudSave, boot, canPay, openInvoice, saveNow, cloudReady };
         })();
 
         /* ===== Магазин монет за Telegram Stars ===== */
@@ -1273,6 +1275,201 @@
                 }
             });
         }
+
+        /* ===== Подарки от администратора: номера по подписанной ссылке из бота =====
+           Бот подписывает {v, uid, numbers, nonce, ts} ключом ECDSA P-256 (приватный ключ только на сервере бота),
+           ссылка: WEBAPP_URL?g=<base64url(payload)>.<base64url(подпись r||s)>.
+           Здесь: проверка подписи открытым ключом, uid === пользователь Telegram, nonce ещё не использован. */
+        const GrantRedeemer = (() => {
+            const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
+            const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
+            const MAX_NUMBERS = 20, MAX_REDEEMED = 500, MAX_COINS = 10000000;
+
+            function b64ToBytes(s) {
+                s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+                while (s.length % 4) s += '=';
+                const bin = atob(s);
+                return Uint8Array.from(bin, c => c.charCodeAt(0));
+            }
+            function readToken() {
+                try {
+                    const q = new URLSearchParams(location.search).get('g');
+                    if (q) return q;
+                    return new URLSearchParams((location.hash || '').slice(1)).get('g');
+                } catch (e) { return null; }
+            }
+            function clearToken() {
+                try {
+                    const u = new URL(location.href);
+                    u.searchParams.delete('g');
+                    window.history.replaceState(window.history.state, '', u.pathname + u.search + u.hash);   // window.: в игре есть своя переменная history
+                } catch (e) {}
+            }
+            const regionOK = (r) => typeof ALL_REGIONS !== 'undefined' && ALL_REGIONS.some(x => x.code === r && x.code !== 'RANDOM');
+            function plateOK(n) {
+                const m = PLATE_RE.exec(n);
+                return !!(m && m[2] !== '000' && regionOK(m[5]));
+            }
+
+            /* Проверка токена. Возвращает {ok:true, payload} или {ok:false, reason}. */
+            async function verify(token) {
+                try {
+                    if (!token || typeof token !== 'string' || token.length > 4000) return { ok: false, reason: 'bad' };
+                    const parts = token.split('.');
+                    if (parts.length !== 2) return { ok: false, reason: 'bad' };
+                    const data = b64ToBytes(parts[0]);
+                    const sig = b64ToBytes(parts[1]);
+                    if (sig.length !== 64) return { ok: false, reason: 'bad' };
+                    if (!(window.crypto && crypto.subtle)) return { ok: false, reason: 'nocrypto' };
+                    const key = await crypto.subtle.importKey('raw', b64ToBytes(PUBKEY_B64), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+                    const good = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, data);
+                    if (!good) return { ok: false, reason: 'bad' };
+                    const p = JSON.parse(new TextDecoder().decode(data));
+                    if (!p || p.v !== 1 || !Number.isSafeInteger(p.uid) || typeof p.nonce !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(p.nonce)) {
+                        return { ok: false, reason: 'bad' };
+                    }
+                    if (p.type === 'coins') {
+                        // подарок монетами: {v, uid, type:'coins', coins, nonce, ts}
+                        if (!Number.isSafeInteger(p.coins) || p.coins <= 0 || p.coins > MAX_COINS || 'numbers' in p) return { ok: false, reason: 'bad' };
+                    } else if (p.type !== undefined || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
+                        return { ok: false, reason: 'bad' };
+                    }
+                    return { ok: true, payload: p };
+                } catch (e) { return { ok: false, reason: 'bad' }; }
+            }
+
+            function makePlate(n, i) {
+                const m = PLATE_RE.exec(n);
+                const [, l1, d, l2, l3, region] = m;
+                return {
+                    id: 'plate_' + Date.now() + '_' + i + '_' + Math.random().toString(36).substr(2, 4),
+                    mainText: `${l1} ${d} ${l2}${l3}`,
+                    region,
+                    fullText: `${l1}${d}${l2}${l3} ${region}`,
+                    val: estimateValue(l1, d, l2, l3, region),
+                    sold: false,
+                    gift: true,
+                };
+            }
+
+            function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+            function showGiftModal(plates) {
+                let ov = document.getElementById('grantModal');
+                if (!ov) {
+                    ov = document.createElement('div');
+                    ov.className = 'modal-overlay';
+                    ov.id = 'grantModal';
+                    document.body.appendChild(ov);
+                }
+                const many = plates.length > 1;
+                ov.innerHTML = `
+                    <div class="modal" style="text-align:center;">
+                        <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
+                        <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
+                        <h2>${many ? 'Вам выданы номера!' : 'Вам выдан номер!'}</h2>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">Подарок от администрации «Номерного Рандомайзера». ${many ? 'Номера уже' : 'Номер уже'} в вашем инвентаре 📦</p>
+                        <div>${plates.map(p => `
+                            <div class="inv-item" style="justify-content:center; gap:10px;">
+                                <span style="font-family:monospace; font-weight:bold; font-size:1rem;">${escapeHtml(p.fullText)}</span>
+                                <span class="${p.val.rarityClass}" style="font-size:0.75rem; font-weight:bold;">${escapeHtml(p.val.rarity)}</span>
+                            </div>`).join('')}
+                        </div>
+                        <button onclick="closeModal('grantModal'); openInventory();" style="margin-top:12px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">📦 Открыть инвентарь</button>
+                    </div>`;
+                openModal('grantModal');
+            }
+
+            function showCoinsModal(amount) {
+                let ov = document.getElementById('grantModal');
+                if (!ov) {
+                    ov = document.createElement('div');
+                    ov.className = 'modal-overlay';
+                    ov.id = 'grantModal';
+                    document.body.appendChild(ov);
+                }
+                ov.innerHTML = `
+                    <div class="modal" style="text-align:center;">
+                        <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
+                        <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
+                        <h2>Вам выданы монеты!</h2>
+                        <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">Подарок от администрации «Номерного Рандомайзера». Монеты уже на вашем балансе.</p>
+                        <button onclick="closeModal('grantModal')" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
+                    </div>`;
+                openModal('grantModal');
+            }
+
+            function redeemedList() {
+                if (!Array.isArray(profile.grantsRedeemed)) profile.grantsRedeemed = [];
+                return profile.grantsRedeemed;
+            }
+
+            /* Обработка ссылки при запуске. Результат кладётся в window.__grantResult (для тестов). */
+            async function run() {
+                const token = readToken();
+                if (!token) return null;
+                const done = (status, extra) => { window.__grantResult = Object.assign({ status }, extra || {}); return window.__grantResult; };
+                const v = await verify(token);
+                if (!v.ok) {
+                    clearToken();
+                    if (v.reason === 'nocrypto') { showToast('Не удалось проверить подарок на этом устройстве. Обнови Telegram и открой ссылку ещё раз', '⚠️'); return done('nocrypto'); }
+                    TGApp.haptic('error');
+                    showToast('Ссылка на подарок недействительна', '⛔');
+                    return done('invalid');
+                }
+                const p = v.payload;
+                const me = TGApp.userId();
+                if (!me) { showToast('Открой подарок из сообщения бота @randomnomerrf_bot в Telegram', '🎁'); return done('not_in_tg'); }
+                if (String(p.uid) !== me) {
+                    clearToken();
+                    TGApp.haptic('error');
+                    showToast('Этот подарок выдан другому игроку', '⛔');
+                    return done('wrong_user');
+                }
+                if (!TGApp.cloudReady()) {
+                    showToast('Не удалось загрузить сохранение. Открой подарок ещё раз чуть позже', '⚠️');
+                    return done('cloud_not_ready');
+                }
+                const list = redeemedList();
+                if (list.includes(p.nonce)) {
+                    clearToken();
+                    showToast(p.type === 'coins' ? 'Этот подарок уже получен — монеты на балансе' : 'Этот подарок уже получен — номера в инвентаре', p.type === 'coins' ? '💰' : '📦');
+                    return done('already');
+                }
+                if (p.type === 'coins') {
+                    // зачисление как у покупки монет (creditPack): баланс -> localStorage -> CloudStorage сразу
+                    coins += p.coins;
+                    list.push(p.nonce);
+                    if (list.length > MAX_REDEEMED) list.splice(0, list.length - MAX_REDEEMED);
+                    updateCoinsDisplay();
+                    saveData();
+                    TGApp.saveNow();
+                    clearToken();
+                    try { checkAchievements(); } catch (e) {}
+                    TGApp.haptic('success');
+                    try { AudioFX.playWin(false); } catch (e) {}
+                    showCoinsModal(p.coins);
+                    showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — подарок от администрации!`, '🎁');
+                    return done('ok', { coins: p.coins });
+                }
+                const plates = p.numbers.map(makePlate);
+                inventory.unshift(...plates);       // подарок кладём даже сверх лимита 120
+                list.push(p.nonce);
+                if (list.length > MAX_REDEEMED) list.splice(0, list.length - MAX_REDEEMED);
+                updateInvCounter();
+                saveData();          // localStorage сразу
+                TGApp.saveNow();     // CloudStorage сразу
+                clearToken();
+                if (plates.some(x => x.val.isLegend)) TGApp.haptic('legend'); else TGApp.haptic('success');
+                try { AudioFX.playWin(plates.some(x => x.val.isLegend)); } catch (e) {}
+                showGiftModal(plates);
+                showToast(plates.length > 1 ? `Вам выданы номера: ${plates.length} шт.` : `Вам выдан номер ${plates[0].fullText}`, '🎁');
+                return done('ok', { numbers: plates.map(x => x.fullText) });
+            }
+
+            return { run, verify };
+        })();
 
     </script>
     <script>
