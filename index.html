@@ -7,6 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="x-build" content="main-tabs">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -811,6 +812,90 @@
             border-color: var(--accent);
             background: rgba(99, 102, 241, 0.15);
         }
+
+        /* ===== BETA: нижняя панель вкладок ===== */
+        :root { --tabbar-h: 58px; }
+        body {
+            align-items: flex-start;
+            padding-bottom: calc(var(--tabbar-h) + 10px + var(--safe-bottom));
+        }
+        .container { gap: 12px; }
+        .tab-panel { display: none; flex-direction: column; gap: 12px; }
+        .tab-panel.active { display: flex; }
+        .tab-title { font-size: 1.1rem; }
+        .top-bar {
+            position: sticky; top: var(--safe-top); z-index: 60;
+            background: var(--card-bg); margin: -8px -6px 0; padding: 8px 6px; border-radius: 16px;
+        }
+        .coins-display { cursor: pointer; position: relative; }
+        .coins-display::after {
+            content: '+'; display: inline-flex; align-items: center; justify-content: center;
+            width: 15px; height: 15px; margin-left: 3px; border-radius: 50%;
+            background: var(--coin); color: #1c1305; font-size: 0.75rem; font-weight: 900; line-height: 1;
+        }
+        #tab-game h1 { font-size: 1rem !important; margin: -2px 0 -4px; }
+        #tab-game .plate-wrapper { margin: 4px 0; }
+        #tab-game .controls { gap: 8px; }
+        #tab-game .btn { padding: 13px; }
+        #tab-history .history-list { max-height: none; overflow: visible; }
+        .tab-panel .modal-like h2 { margin-bottom: 0; }
+        .tab-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .tab-actions button, .bonus-tile {
+            background: var(--card-inner); border: 1px solid var(--border); color: var(--text);
+            border-radius: 14px; padding: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+        }
+        .bonus-tile {
+            width: 100%; margin: 0; display: flex; align-items: center; gap: 12px; text-align: left;
+            padding: 12px 14px; font-size: 0.9rem; white-space: normal;
+        }
+        .bonus-tile .bt-ic { font-size: 1.6rem; flex: none; width: 34px; text-align: center; }
+        .bonus-tile .bt-tx { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .bonus-tile .bt-tx small { font-size: 0.72rem; font-weight: 600; color: var(--muted); }
+        .bonus-tile .bt-go { font-size: 1.3rem; color: var(--muted); flex: none; }
+        .bonus-tile:active, .tab-actions button:active { transform: scale(0.98); }
+        .bonus-tile.promo { border-color: rgba(129, 140, 248, 0.55); background: rgba(99, 102, 241, 0.10); }
+        .bonus-tile.ch { border-color: rgba(56, 189, 248, 0.55); background: rgba(56, 189, 248, 0.10); }
+        .bonus-tile.tm { border-color: rgba(240, 88, 10, 0.55); background: rgba(240, 88, 10, 0.10); }
+        .bonus-tile.stars { border-color: rgba(251, 191, 36, 0.5); background: rgba(251, 191, 36, 0.08); }
+        .bonus-tile.ad { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.08); }
+        .tabbar {
+            position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+            display: flex; justify-content: center;
+            background: rgba(13, 15, 23, 0.97); border-top: 1px solid var(--border);
+            padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+            -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        }
+        .tabbar-inner { width: 100%; max-width: 480px; height: var(--tabbar-h); display: flex; position: relative; }
+        .tab-btn {
+            flex: 1; min-width: 0; background: none; border: none; cursor: pointer; color: var(--muted);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            font-size: 0.68rem; font-weight: 700; position: relative; padding: 4px 0 2px;
+            touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        }
+        .tab-btn .ti { font-size: 1.3rem; line-height: 1; filter: grayscale(0.6); opacity: 0.75; transition: transform 0.15s; }
+        .tab-btn.active { color: #a5b4fc; }
+        .tab-btn.active .ti { filter: none; opacity: 1; transform: translateY(-1px) scale(1.08); }
+        .tab-btn.active::before {
+            content: ''; position: absolute; top: 0; left: 22%; right: 22%; height: 3px;
+            border-radius: 0 0 3px 3px; background: var(--accent);
+        }
+        .tab-btn .tab-dot {
+            display: none; position: absolute; top: 7px; left: calc(50% + 9px);
+            width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 2px #0d0f17;
+        }
+        .tab-btn.has-dot .tab-dot { display: block; }
+        .toast {
+            bottom: calc(var(--tabbar-h) + 14px + var(--safe-bottom));
+            transform: translateX(-50%) translateY(calc(var(--tabbar-h) + 140px + var(--safe-bottom)));
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        @media (max-height: 700px) {
+            #tab-game h1 { display: none; }
+            #tab-game .btn { padding: 11px; }
+            #tab-game .controls { gap: 7px; }
+            .container { gap: 10px; padding-top: 12px; padding-bottom: 12px; }
+            .tab-panel { gap: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -821,7 +906,7 @@
         <!-- Top Stats Bar -->
         <div class="top-bar">
             <div class="top-bar-left">
-                <div class="coins-display" id="coinsDisplay">💰 500</div>
+                <div class="coins-display" id="coinsDisplay" onclick="openDonate()" title="Магазин монет">💰 500</div>
                 <button class="ad-btn" onclick="startAdModal()">📺 +250 💰</button>
                 <div class="inv-counter" id="invCounter">📦 0/120</div>
             </div>
@@ -832,6 +917,7 @@
             </div>
         </div>
 
+        <section class="tab-panel active" id="tab-game" data-tab="game" role="tabpanel">
         <h1 style="font-size:1.2rem; text-align:center;">🚗 Рандомайзер номеров</h1>
 
         <!-- Luck Bar -->
@@ -887,24 +973,102 @@
                 <button class="btn btn-inv" id="invBtn" onclick="saveToInventory()">📦 В инвентарь</button>
             </div>
         </div>
+        </section>
 
+        <section class="tab-panel" id="tab-history" data-tab="history" role="tabpanel">
         <!-- History -->
         <div class="history-section">
             <div class="history-title">
-                <span>📜 История номеров (Клик для просмотра)</span>
+                <span>📜 Последние 20 номеров · нажми, чтобы посмотреть</span>
             </div>
             <div class="history-list" id="historyList">
                 <div class="empty">История пуста</div>
             </div>
         </div>
+            <div class="tab-actions"><button onclick="openInventory()">📦 Инвентарь</button><button onclick="TabBar.go('game')">🎲 К прокруту</button></div>
+        </section>
 
-        <button class="donate-link" id="donateOpenBtn" onclick="openDonate()">🛒 Монеты за ⭐ · бонус до +40%</button>
-        <div class="promo-row">
-            <button class="promo-mini" id="promoOpenBtn" onclick="PromoUI.open()">🎟 Промокод</button>
-            <button class="promo-mini ch" id="channelBtn" onclick="PromoUI.openChannel()">📢 Канал игры</button>
-        </div>
-        <button class="tm-mini" id="tmMainBtn" onclick="technoShowInShop()">🎁 +1 000 💰 за подписку на Техноманию</button>
+        <section class="tab-panel" id="tab-shop" data-tab="shop" role="tabpanel"><div class="modal-like">
+            <h2>🛒 Магазин монет</h2>
+            <p class="donate-note" style="margin-top:8px;">Пополни баланс за звёзды Telegram и поддержи разработку. Чем больше пакет — тем выгоднее курс. К любой покупке — значок «⭐ Спонсор» в профиле.</p>
+            <div class="donate-grid" id="donateGrid"></div>
+            <div class="tm-card" id="tmCard">
+                <span class="tm-ad">Реклама</span>
+                <div class="tm-head">
+                    <img class="tm-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAMAAADVRocKAAAAwFBMVEXfJyvwVhmoJhzoGzP1UhfqJTX3WRPvYVf31M7rJzP2WhL3l4yzj5SZY2hiFyG/HCj/WVn4j3D6A3SmfILTvsHrMEj//wB/QUiqVQD7yLh6OEGqAFW9QBIAAAD+/v7qJzT2VxXvNyrzSxzyQyL6Yg3oHDpTBQ/329f/AAD9VQPx5eX/fgBrExnKKCjyG0BsJi/VwcRqCxDvNhjKNhvmGTz5ZAv5PAn5OjmpJxv/AFXtOCf5t7KNGhnOtrmFSlHGqq4UACQ+AAAAQHRSTlPp5P8SXqen//9jFv////8EAv8H///tAf8D//8D/wD//v7+/v7+/f//AQf/Av///v//////T08FC/8DUP//////s+B2XQAABi5JREFUeNq1mtlimzoQhiU2L1mbtD09iw4WGAzGrmPHsRM3y/u/VUdiG4EM2KFzkQXBfMz80kgICGu2ZBeJX7FlOQ6dZEYdx3oai+Pfk6TFAWlqjOJEOi9dpzaVRh0JSeLoTEAUw4+x5Uz0JiGOJRhNCNLk/uaodxSI83TThDgGiMXN08mkHQC5smJ5wQmAKGGmcO+BdSAAYsyS790BcDcW9XLrQpjSpyNBEG32x46HrBNh6oy1StQB0DMtz/dOJ0yf5MVtgJjtHF/135ngxPU0VQF7ZlLfP5dAx7UYKoAds/zMziJAmpImwJ4dfL9fAlH9W77fM4Ecu/++CATn/+Bz3jeBoP554MJ6IcR1AFQfzvsioN6aA6IfO8J7I9ByFsoBN8zmvD+CA4oqgFyA3giFDCkgivac90sYf08Q4BYnqB+Ck4VAUv8HzvsmZEmSgMgkvHcCjZMoA9yyEef9EywZAhEK7wj/AwQ6jiIJuNEH8HmCJQaDiGBP+B8hQAgCoOtCPRFERyKaMXAMcDLBgZpHIrZ3Oe+GUP13IEBVJXuQ+DxChxgsAESQITcjuBezRhtsPJr/Pfyii+FimBudpDkizHSFpYBf/zfawPMGxT8zAFQI3pfyXJrliLCRWxJmjf7nhkGQi8FjhYD9z4z/qOxHhNluTnAHzQE8hOEaxXgZUpVA57gxNKYTyBGJiJsT2gBw0TOO8dqYKErjtqsUQBNiuiXgohkgLsL/369xX/KUq9/DkAJgGpMRArRo/E8YKjHOQqN8BsICgK3CxWQKvfUJAVy3RePrcK16eV9P8hg8Nb3DEABiOFjELv0PZvPcsN/cPlSNwd5Cmo9qLDDYh5QAAA4GQD9dXi8Wi+vwEisrDi3k4fC1EuPqNQvB+7suVwYgLjYjlPamnFqaUetXfuq/2j2ExjJFVPXvLg1pKN6/wK3xbDyDGUa1H8+lzLQisNR4nXWuCkAOaGU8gLJFydvU+vHVWoRAq4dnmcYaQHXAwehdFHV1U+vHb+Gj5/nD6mGhcRPgQhm9r2Xprvfj1SutCpxp3AQYqqeWU4OufGw04z/XWA9w+Vw5dZn732hq1Ty80oxJ0NhrAAzUU4sAiK5WXQ7rx5DGbYAZ0piT5lo112k8IXVCcKF0B63Gl3W5Lx/KMlsCKC4Vuf1q1/j9vtYzV1qNHR3giMYEpW61qon9rtXYUcq1VuOlRuPZNS5XaUW51GpskW1Ngg4av4X4htNUfmg1togZnKNxZXaG88IZ1vg5B8Ri0lcRAdL4/ojGcMN4AQOBhiul9THvRIlYtlRimOk1xtqsAODPUcW9xgMaWguNYV20dQOF8K2DxkKasgZdhevQUFvztYYFADMIMKGqcb5urWj86heVCQQJFxul1chXZLFYvtsKAWssHBUr44rGPs98Poi59NFXWyfp+t5hETHZ6CcmBL/U9R/PpzlV46UorsM3MMh4+IwnNalxuhaApzSIQOaoJMxUR/lEWtVY1u9sjYDylbbSbLkUQwTsLs1RRghUjTOAq2g8L4ffQvhfcDxbz6XGEiAfodgL2wYlIRjAw8ODsK8PHzDho3k0a/j6gKZRIoyL5QC0fi1avTxDsXyMNUmAYwiMciH0iiZS110Xx5+rD1ibzQa1pv6zx1jxIP4TE1wEMPCCZlkeX9Yf43jZ+lhInG0lFCGkBJLZEkxZDCwL0z0oPhaWZqjYSgAVihACt8H4ac/TxWaIVKETwT1lSyANIAVARyoAvcQA/n0LbUgBwe6Z4CtbakLnIOiXMI7wpqCapD4IlrqtKTdm+yQ44LCytfwv6kmfJtDdj+rWMtS8u6A3gmZzvCrDpwgj3fa+kKEPAhcC7/SvWMx+YlD8qy+J+iD4B8V/5TUXED6r9IHtm17U3XyWUPVfe9VoMvPb+QRYo+zbXpa+MPPsMW3v2l+WihGnpOkEwgEKQqcX1moQXQn2vuMLa5kmtiWnzaLkIN5DdP9o4I6ZI/KzM4GMTJZEJ332AEEAItOihSDcn/jZQ6oEu9naLQiR+wOU/tvonE9PXsS4GNlNEdji5hvct30883InGFub6BjEHolRFd2e+/FMyjDl5eZ2ZNukdG2P5K2zaB+1OPgNQ/VwIhBRKG8AAAAASUVORK5CYII=" alt="ТМ" width="44" height="44">
+                    <div><div class="tm-word">ТЕХНО<span>МАНИЯ</span></div><div class="tm-tag">МАГАЗИН БЫТОВОЙ ТЕХНИКИ</div></div>
+                </div>
+                <div class="tm-text">Новая техника с официальной гарантией • Глинки 70Д</div>
+                <button class="tm-btn" id="tmChannelBtn" onclick="technoChannel()">📣 Перейти в канал</button>
+                <div class="tm-bonus" id="tmBonus">
+                    <div class="tm-bonus-title">🎁 +1 000 монет за подписку на Техноманию</div>
+                    <div class="tm-bonus-row">
+                        <button class="tm-btn ghost" id="tmSubBtn" onclick="technoSubscribe()">Подписаться</button>
+                        <button class="tm-btn" id="tmCheckBtn" onclick="technoCheck()">Проверить и получить</button>
+                    </div>
+                    <div class="tm-bonus-note">Подпишись, затем нажми «Проверить» — бот пришлёт монеты. Один раз на аккаунт.</div>
+                    <div class="tm-done">✅ Получено: +1 000 💰</div>
+                </div>
+            </div>
+            <div style="text-align:center;"><button class="promo-link" id="promoShopLink" onclick="PromoUI.open();">🎟 Есть промокод?</button></div>
+            <div class="donate-note">Монеты зачисляются сразу после оплаты. Они виртуальные, не имеют реальной ценности и возврату не подлежат. Вопросы по оплате — /paysupport в боте, условия — /terms.</div>
+            <div id="donateTotal"></div>
+            <div class="donate-outside" id="donateOutside">💡 Покупка за звёзды работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
+
+        </div></section>
+
+        <section class="tab-panel" id="tab-bonus" data-tab="bonus" role="tabpanel">
+            <h2 class="tab-title">🎁 Бонусы</h2>
+            <button class="bonus-tile promo" id="promoOpenBtn" onclick="PromoUI.open()"><span class="bt-ic">🎟</span><span class="bt-tx"><b>🎟 Промокод</b><small>Введи код — получи монеты</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile tm" id="tmMainBtn" onclick="technoShowInShop()"><span class="bt-ic">📣</span><span class="bt-tx"><b>🎁 +1 000 💰 за подписку на Техноманию</b><small>Подпишись на канал магазина и забери монеты</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile ad" id="adTileBtn" onclick="startAdModal()"><span class="bt-ic">📺</span><span class="bt-tx"><b>Реклама: +250 💰</b><small>Посмотри рекламную паузу 30 сек</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile ch" id="channelBtn" onclick="PromoUI.openChannel()"><span class="bt-ic">📢</span><span class="bt-tx"><b>📢 Канал игры</b><small>Новости и свежие промокоды</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile stars" id="donateOpenBtn" onclick="openDonate()"><span class="bt-ic">⭐</span><span class="bt-tx"><b>🛒 Монеты за ⭐ · бонус до +40%</b><small>Магазин монет за звёзды Telegram</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile" id="achTileBtn" onclick="openAchievements()"><span class="bt-ic">🏆</span><span class="bt-tx"><b>Достижения</b><small>Награды монетами за прогресс</small></span><span class="bt-go">›</span></button>
+        </section>
+
+        <section class="tab-panel" id="tab-profile" data-tab="profile" role="tabpanel"><div class="modal-like">
+            <h2>👤 Профиль <span class="sponsor-badge" id="sponsorBadge">⭐ Спонсор</span></h2>
+            <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+                <div>
+                    <label style="font-size:0.8rem; color:var(--muted);">Ваш Никнейм:</label>
+                    <input id="nickInput" style="background:var(--card-inner); border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; width:100%; margin-top:4px; font-weight:bold;" onchange="saveProfileNick(this.value)">
+                </div>
+
+                <div>
+                    <label style="font-size:0.85rem; font-weight:bold; color:var(--text);">🎨 Рамка номера</label>
+                    <div class="frame-select-grid">
+                        <div class="frame-card" id="frame-standard" onclick="setFrameStyle('standard')">Стандартная</div>
+                        <div class="frame-card" id="frame-gold" onclick="setFrameStyle('gold')">Золотая ✨</div>
+                        <div class="frame-card" id="frame-neon" onclick="setFrameStyle('neon')">Неон 💜</div>
+                        <div class="frame-card" id="frame-carbon" onclick="setFrameStyle('carbon')">Карбон 🏁</div>
+                    </div>
+                </div>
+                
+                <div class="showcase-container">
+                    <label style="font-size:0.85rem; font-weight:bold; color:var(--text);">🖼 Витрина номеров</label>
+                    <div style="font-size:0.75rem; color:var(--muted);">Кликните на слот, чтобы выставить номер из инвентаря</div>
+                    <div class="showcase-grid" id="showcaseGrid"></div>
+                </div>
+
+                <button class="donate-link" style="margin-top:0" onclick="openDonate()">🛒 Магазин монет за ⭐</button>
+
+                <div id="profileStats" style="font-size:0.85rem; color:var(--muted); line-height:1.6; background:var(--card-inner); padding:12px; border-radius:10px; border:1px solid var(--border);"></div>
+            </div>
+
+            <div class="tab-actions" style="margin-top:10px"><button onclick="openAchievements()">🏆 Достижения</button><button onclick="openInventory()">📦 Инвентарь</button></div>
+        </div></section>
     </div>
+
+    <nav class="tabbar" id="tabBar" role="tablist">
+        <div class="tabbar-inner">
+            <button class="tab-btn active" data-tab="game" id="tabBtn-game" role="tab" aria-selected="true" onclick="TabBar.go('game')"><span class="ti">🎰</span><span>Игра</span><span class="tab-dot"></span></button>
+            <button class="tab-btn" data-tab="history" id="tabBtn-history" role="tab" aria-selected="false" onclick="TabBar.go('history')"><span class="ti">📜</span><span>История</span><span class="tab-dot"></span></button>
+            <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
+            <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
+            <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
+        </div>
+    </nav>
 
     <!-- Modals -->
     <!-- Ad Banner Modal -->
@@ -960,40 +1124,6 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('profileModal')">✕</button>
-            <h2>👤 Профиль <span class="sponsor-badge" id="sponsorBadge">⭐ Спонсор</span></h2>
-            <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
-                <div>
-                    <label style="font-size:0.8rem; color:var(--muted);">Ваш Никнейм:</label>
-                    <input id="nickInput" style="background:var(--card-inner); border:1px solid var(--border); color:white; padding:8px 12px; border-radius:8px; width:100%; margin-top:4px; font-weight:bold;" onchange="saveProfileNick(this.value)">
-                </div>
-
-                <div>
-                    <label style="font-size:0.85rem; font-weight:bold; color:var(--text);">🎨 Рамка номера</label>
-                    <div class="frame-select-grid">
-                        <div class="frame-card" id="frame-standard" onclick="setFrameStyle('standard')">Стандартная</div>
-                        <div class="frame-card" id="frame-gold" onclick="setFrameStyle('gold')">Золотая ✨</div>
-                        <div class="frame-card" id="frame-neon" onclick="setFrameStyle('neon')">Неон 💜</div>
-                        <div class="frame-card" id="frame-carbon" onclick="setFrameStyle('carbon')">Карбон 🏁</div>
-                    </div>
-                </div>
-                
-                <div class="showcase-container">
-                    <label style="font-size:0.85rem; font-weight:bold; color:var(--text);">🖼 Витрина номеров</label>
-                    <div style="font-size:0.75rem; color:var(--muted);">Кликните на слот, чтобы выставить номер из инвентаря</div>
-                    <div class="showcase-grid" id="showcaseGrid"></div>
-                </div>
-
-                <button class="donate-link" style="margin-top:0" onclick="openDonate()">🛒 Магазин монет за ⭐</button>
-
-                <div id="profileStats" style="font-size:0.85rem; color:var(--muted); line-height:1.6; background:var(--card-inner); padding:12px; border-radius:10px; border:1px solid var(--border);"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Promo Code Modal -->
     <div class="modal-overlay" id="promoModal">
         <div class="modal" style="text-align:center;">
@@ -1008,38 +1138,6 @@
             <div class="promo-msg" id="promoMsg"></div>
             <div class="promo-note">Код проверит бот @randomnomerrf_bot и пришлёт кнопку «🎁 Забрать в игре». Каждый промокод — один раз на аккаунт.</div>
             <button class="promo-link" id="promoChannelLink" onclick="PromoUI.openChannel()">📢 Свежие промокоды — в канале игры</button>
-        </div>
-    </div>
-
-    <!-- Donate Modal -->
-    <div class="modal-overlay" id="donateModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('donateModal')">✕</button>
-            <h2>🛒 Магазин монет</h2>
-            <p class="donate-note" style="margin-top:8px;">Пополни баланс за звёзды Telegram и поддержи разработку. Чем больше пакет — тем выгоднее курс. К любой покупке — значок «⭐ Спонсор» в профиле.</p>
-            <div class="donate-grid" id="donateGrid"></div>
-            <div class="tm-card" id="tmCard">
-                <span class="tm-ad">Реклама</span>
-                <div class="tm-head">
-                    <img class="tm-logo" src="data:image/png;base64,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" alt="ТМ" width="44" height="44">
-                    <div><div class="tm-word">ТЕХНО<span>МАНИЯ</span></div><div class="tm-tag">МАГАЗИН БЫТОВОЙ ТЕХНИКИ</div></div>
-                </div>
-                <div class="tm-text">Новая техника с официальной гарантией • Глинки 70Д</div>
-                <button class="tm-btn" id="tmChannelBtn" onclick="technoChannel()">📣 Перейти в канал</button>
-                <div class="tm-bonus" id="tmBonus">
-                    <div class="tm-bonus-title">🎁 +1 000 монет за подписку на Техноманию</div>
-                    <div class="tm-bonus-row">
-                        <button class="tm-btn ghost" id="tmSubBtn" onclick="technoSubscribe()">Подписаться</button>
-                        <button class="tm-btn" id="tmCheckBtn" onclick="technoCheck()">Проверить и получить</button>
-                    </div>
-                    <div class="tm-bonus-note">Подпишись, затем нажми «Проверить» — бот пришлёт монеты. Один раз на аккаунт.</div>
-                    <div class="tm-done">✅ Получено: +1 000 💰</div>
-                </div>
-            </div>
-            <div style="text-align:center;"><button class="promo-link" id="promoShopLink" onclick="closeModal('donateModal'); PromoUI.open();">🎟 Есть промокод?</button></div>
-            <div class="donate-note">Монеты зачисляются сразу после оплаты. Они виртуальные, не имеют реальной ценности и возврату не подлежат. Вопросы по оплате — /paysupport в боте, условия — /terms.</div>
-            <div id="donateTotal"></div>
-            <div class="donate-outside" id="donateOutside">💡 Покупка за звёзды работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
         </div>
     </div>
 
@@ -1218,7 +1316,10 @@
             function saveNow() { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); }
             function startParam() {
                 const sp = inTG && WA.initDataUnsafe && WA.initDataUnsafe.start_param;
-                return sp || (location.hash || '').replace('#', '') || null;
+                let q = null;
+                try { const u = new URLSearchParams(location.search); q = u.get('tgWebAppStartParam') || u.get('tab'); } catch (e) {}
+                const h = (location.hash || '').replace('#', '').split('&')[0];
+                return sp || q || (h && h.indexOf('=') < 0 ? h : '') || null;
             }
             function flush() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); } }
 
@@ -1229,7 +1330,7 @@
             }
             function closeTop() {
                 const m = topModal();
-                if (!m) return;
+                if (!m) { if (typeof TabBar !== 'undefined' && TabBar.current() !== 'game') TabBar.show('game'); return; }
                 if (m.id === 'adModal') {
                     if (document.getElementById('adCloseBtn').style.display === 'none') { haptic('warning'); return; }
                     closeAdModal();
@@ -1239,7 +1340,7 @@
             }
             function syncBackButton() {
                 if (!ver('6.1') || !WA.BackButton) return;
-                topModal() ? WA.BackButton.show() : WA.BackButton.hide();
+                (topModal() || (typeof TabBar !== 'undefined' && TabBar.current() !== 'game')) ? WA.BackButton.show() : WA.BackButton.hide();
             }
 
             function hideBoot() {
@@ -1260,7 +1361,7 @@
                 // block pinch-zoom gestures on iOS
                 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
-                if (!inTG) { hideBoot(); if (startParam() === 'shop' && typeof openDonate === 'function') openDonate(); if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400); return; }
+                if (!inTG) { hideBoot(); TabBar.deepLink(startParam()); if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400); return; }
 
                 try { WA.ready(); WA.expand(); } catch (e) {}
                 if (ver('7.7') && WA.disableVerticalSwipes) { try { WA.disableVerticalSwipes(); } catch (e) {} }
@@ -1294,7 +1395,7 @@
                 }
                 hideBoot();
                 greet();
-                if (startParam() === 'shop' && typeof openDonate === 'function') setTimeout(openDonate, 300);
+                setTimeout(() => TabBar.deepLink(startParam()), 300);
                 if (typeof GrantRedeemer !== 'undefined') setTimeout(() => GrantRedeemer.run(), 400);
             }
 
@@ -1302,6 +1403,74 @@
             return { inTG, userId, haptic, setClosingConfirmation, scheduleCloudSave, boot, canPay, openInvoice, saveNow, cloudReady };
         })();
 
+
+        /* ===== BETA: нижняя панель вкладок =====
+           Вкладка — это только видимость секции; состояние игры, сохранения и функции те же, что в основной версии.
+           Последняя вкладка помнится только в памяти (каждый запуск — на «Игре»). */
+        const TabBar = (() => {
+            let cur = 'game';
+            const $ = (s) => document.querySelector(s);
+            function current() { return cur; }
+            function show(name) {
+                const panel = document.getElementById('tab-' + name);
+                if (!panel) return;
+                const changed = name !== cur;
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p === panel));
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    const on = b.dataset.tab === name;
+                    b.classList.toggle('active', on);
+                    b.setAttribute('aria-selected', on ? 'true' : 'false');
+                });
+                cur = name;
+                if (changed) {
+                    try { window.scrollTo(0, 0); } catch (e) {}
+                    try { TGApp.haptic('select'); } catch (e) {}
+                }
+            }
+            /* нажатие на вкладку: магазин и профиль рисуются своими штатными функциями */
+            function go(name) {
+                if (name === 'shop') return openDonate();
+                if (name === 'profile') return openProfile();
+                if (name === 'bonus') { try { renderTechno(); PromoUI.render(); } catch (e) {} }
+                show(name);
+            }
+            function badge(name, on) {
+                const b = $('.tab-btn[data-tab="' + name + '"]');
+                if (b) b.classList.toggle('has-dot', !!on);
+            }
+            /* запасной вариант safe area, если telegram-web-app.js не выставил CSS-переменные сам */
+            function syncSafeArea() {
+                const WA = window.Telegram && window.Telegram.WebApp;
+                if (!WA) return;
+                const st = document.documentElement.style;
+                const put = (pref, o) => {
+                    if (!o) return;
+                    ['top', 'bottom', 'left', 'right'].forEach(k => {
+                        const v = '--tg-' + pref + '-inset-' + k;
+                        if (Number.isFinite(o[k])) st.setProperty(v, o[k] + 'px');
+                    });
+                };
+                try { put('safe-area', WA.safeAreaInset); put('content-safe-area', WA.contentSafeAreaInset); } catch (e) {}
+            }
+            function init() {
+                syncSafeArea();
+                const WA = window.Telegram && window.Telegram.WebApp;
+                try { if (WA && WA.onEvent) { WA.onEvent('safeAreaChanged', syncSafeArea); WA.onEvent('contentSafeAreaChanged', syncSafeArea); } } catch (e) {}
+            }
+            // Открыть нужную вкладку по ссылке: startapp=bonus, ?tab=bonus или #bonus (shop/bonus/promo/history/profile/game)
+            const LINK_TABS = ['game', 'history', 'shop', 'bonus', 'profile'];
+            function deepLink(p) {
+                p = String(p || '').toLowerCase();
+                if (!p) return null;
+                try {
+                    if (p === 'shop' && typeof openDonate === 'function') { openDonate(); return 'shop'; }
+                    if (p === 'promo') { show('bonus'); if (typeof PromoUI !== 'undefined') PromoUI.open(); return 'promo'; }
+                    if (LINK_TABS.indexOf(p) >= 0) { show(p); return p; }
+                } catch (e) {}
+                return null;
+            }
+            return { show, go, current, badge, init, deepLink };
+        })();
         /* ===== Магазин монет за Telegram Stars ===== */
         const COIN_PACKS = [{"stars": 10, "coins": 1200, "bonus": 0, "hit": false, "link": "https://t.me/$Ugnq2T1o-Fb1BAAA9UwTD4TfXck"}, {"stars": 50, "coins": 6600, "bonus": 10, "hit": false, "link": "https://t.me/$_0oRvT1o-Fb2BAAAH0FIjoyqPq0"}, {"stars": 100, "coins": 14400, "bonus": 20, "hit": true, "link": "https://t.me/$T59n0D1o-Fb3BAAApJ42BwWSgHc"}, {"stars": 250, "coins": 39000, "bonus": 30, "hit": false, "link": "https://t.me/$wleZsD1o-Fb4BAAAEWYxyoSJrP0"}, {"stars": 500, "coins": 84000, "bonus": 40, "hit": false, "link": "https://t.me/$DKyN9j1o-Fb5BAAA759ogh4cKoE"}];   // [{stars, coins, bonus, hit, link}]
         const DONATE_BOT_LINK = 'https://t.me/randomnomerrf_bot?start=donate';
@@ -1337,8 +1506,7 @@
             if (outside) outside.style.display = TGApp.canPay() ? 'none' : 'block';
             renderSponsorBadge();
             renderTechno();
-            openModal('donateModal');
-            TGApp.haptic('select');
+            TabBar.show('shop');
         }
 
         function creditPack(pack) {
@@ -1417,6 +1585,7 @@
             if (b) b.classList.toggle('claimed', done);
             const m = document.getElementById('tmMainBtn');
             if (m) m.style.display = done ? 'none' : '';
+            if (typeof TabBar !== 'undefined') TabBar.badge('bonus', !done);
         }
 
         /* ===== Промокоды на монеты + ссылка на канал игры =====
@@ -1614,7 +1783,7 @@
                         <h2>${sub ? 'Спасибо за подписку!' : promo ? 'Промокод активирован!' : 'Вам выданы монеты!'}</h2>
                         <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
                         <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : promo ? `Промокод <b>${escapeHtml(code)}</b>.` : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
-                        <button onclick="closeModal('grantModal')" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
+                        <button onclick="closeModal('grantModal'); TabBar.show('game');" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
                     </div>`;
                 openModal('grantModal');
             }
@@ -1646,6 +1815,7 @@
                 const token = readToken();
                 if (!token) return null;
                 const done = (status, extra) => { window.__grantResult = Object.assign({ status }, extra || {}); return window.__grantResult; };
+                try { TabBar.show('game'); } catch (e) {}
                 const v = await verify(token);
                 if (!v.ok) {
                     clearToken();
@@ -1962,6 +2132,7 @@
         window.onload = function() {
             loadData();
             generatePlate(true);
+            TabBar.init();
             renderTechno();
             PromoUI.render();
             TGApp.boot();
@@ -2148,7 +2319,7 @@
             updateFrameUI();
             renderShowcase();
             renderSponsorBadge();
-            openModal('profileModal');
+            TabBar.show('profile');
         }
 
         function saveProfileNick(val) {
@@ -2663,6 +2834,7 @@
             if (!item) return;
             currentPlate = item;
             renderPlateCard(currentPlate);
+            TabBar.show('game');
         }
 
         function toggleAutoRoll() {
