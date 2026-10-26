@@ -1283,7 +1283,7 @@
         const GrantRedeemer = (() => {
             const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
             const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
-            const MAX_NUMBERS = 20, MAX_REDEEMED = 500;
+            const MAX_NUMBERS = 20, MAX_REDEEMED = 500, MAX_COINS = 10000000;
 
             function b64ToBytes(s) {
                 s = String(s).replace(/-/g, '+').replace(/_/g, '/');
@@ -1325,8 +1325,13 @@
                     const good = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, sig, data);
                     if (!good) return { ok: false, reason: 'bad' };
                     const p = JSON.parse(new TextDecoder().decode(data));
-                    if (!p || p.v !== 1 || !Number.isSafeInteger(p.uid) || typeof p.nonce !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(p.nonce)
-                        || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
+                    if (!p || p.v !== 1 || !Number.isSafeInteger(p.uid) || typeof p.nonce !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(p.nonce)) {
+                        return { ok: false, reason: 'bad' };
+                    }
+                    if (p.type === 'coins') {
+                        // подарок монетами: {v, uid, type:'coins', coins, nonce, ts}
+                        if (!Number.isSafeInteger(p.coins) || p.coins <= 0 || p.coins > MAX_COINS || 'numbers' in p) return { ok: false, reason: 'bad' };
+                    } else if (p.type !== undefined || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
                         return { ok: false, reason: 'bad' };
                     }
                     return { ok: true, payload: p };
@@ -1375,6 +1380,26 @@
                 openModal('grantModal');
             }
 
+            function showCoinsModal(amount) {
+                let ov = document.getElementById('grantModal');
+                if (!ov) {
+                    ov = document.createElement('div');
+                    ov.className = 'modal-overlay';
+                    ov.id = 'grantModal';
+                    document.body.appendChild(ov);
+                }
+                ov.innerHTML = `
+                    <div class="modal" style="text-align:center;">
+                        <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
+                        <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
+                        <h2>Вам выданы монеты!</h2>
+                        <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">Подарок от администрации «Номерного Рандомайзера». Монеты уже на вашем балансе.</p>
+                        <button onclick="closeModal('grantModal')" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
+                    </div>`;
+                openModal('grantModal');
+            }
+
             function redeemedList() {
                 if (!Array.isArray(profile.grantsRedeemed)) profile.grantsRedeemed = [];
                 return profile.grantsRedeemed;
@@ -1409,8 +1434,24 @@
                 const list = redeemedList();
                 if (list.includes(p.nonce)) {
                     clearToken();
-                    showToast('Этот подарок уже получен — номера в инвентаре', '📦');
+                    showToast(p.type === 'coins' ? 'Этот подарок уже получен — монеты на балансе' : 'Этот подарок уже получен — номера в инвентаре', p.type === 'coins' ? '💰' : '📦');
                     return done('already');
+                }
+                if (p.type === 'coins') {
+                    // зачисление как у покупки монет (creditPack): баланс -> localStorage -> CloudStorage сразу
+                    coins += p.coins;
+                    list.push(p.nonce);
+                    if (list.length > MAX_REDEEMED) list.splice(0, list.length - MAX_REDEEMED);
+                    updateCoinsDisplay();
+                    saveData();
+                    TGApp.saveNow();
+                    clearToken();
+                    try { checkAchievements(); } catch (e) {}
+                    TGApp.haptic('success');
+                    try { AudioFX.playWin(false); } catch (e) {}
+                    showCoinsModal(p.coins);
+                    showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — подарок от администрации!`, '🎁');
+                    return done('ok', { coins: p.coins });
                 }
                 const plates = p.numbers.map(makePlate);
                 inventory.unshift(...plates);       // подарок кладём даже сверх лимита 120
