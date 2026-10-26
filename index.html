@@ -714,7 +714,7 @@
             color: #fbbf24; font-weight: 700; font-size: 0.85rem; transition: background 0.2s;
         }
         .donate-link:hover { background: rgba(251, 191, 36, 0.16); }
-        .donate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 10px; }
+        .donate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 8px; margin: 18px 0 12px; }
         .donate-amount {
             background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(245,158,11,0.08));
             border: 1px solid rgba(251, 191, 36, 0.45); color: #fde68a;
@@ -723,8 +723,18 @@
         }
         .donate-amount:hover { background: rgba(251, 191, 36, 0.25); }
         .donate-amount:active { transform: scale(0.96); }
-        .donate-amount.big { grid-column: span 3; }
-        .donate-amount small { display: block; font-size: 0.65rem; font-weight: 600; color: var(--muted); margin-top: 2px; }
+        .donate-amount { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 18px 4px 10px; }
+        .donate-amount.wide { grid-column: span 2; }
+        .donate-amount.hit { border-color: #fbbf24; box-shadow: 0 0 14px rgba(251, 191, 36, 0.35); }
+        .pack-coins { font-size: 0.95rem; color: var(--coin, #fbbf24); }
+        .pack-price { font-size: 0.75rem; font-weight: 800; color: #1c1305; background: #fbbf24; border-radius: 10px; padding: 2px 8px; }
+        .pack-tag {
+            position: absolute; top: -8px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+            font-size: 0.6rem; font-weight: 800; padding: 2px 7px; border-radius: 10px;
+            background: #10b981; color: #04140d;
+        }
+        .pack-tag.hit-tag { background: linear-gradient(135deg, #f97316, #ef4444); color: #fff; }
+        .donate-amount small { display: block; font-size: 0.6rem; font-weight: 700; color: #34d399; }
         .donate-note { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
         .donate-outside {
             display: none; margin-top: 10px; padding: 12px; border-radius: 12px; font-size: 0.8rem;
@@ -830,7 +840,7 @@
             </div>
         </div>
 
-        <button class="donate-link" id="donateOpenBtn" onclick="openDonate()">⭐ Поддержать игру звёздами</button>
+        <button class="donate-link" id="donateOpenBtn" onclick="openDonate()">🛒 Монеты за ⭐ · бонус до +40%</button>
     </div>
 
     <!-- Modals -->
@@ -914,7 +924,7 @@
                     <div class="showcase-grid" id="showcaseGrid"></div>
                 </div>
 
-                <button class="donate-link" style="margin-top:0" onclick="openDonate()">⭐ Поддержать игру</button>
+                <button class="donate-link" style="margin-top:0" onclick="openDonate()">🛒 Магазин монет за ⭐</button>
 
                 <div id="profileStats" style="font-size:0.85rem; color:var(--muted); line-height:1.6; background:var(--card-inner); padding:12px; border-radius:10px; border:1px solid var(--border);"></div>
             </div>
@@ -925,18 +935,12 @@
     <div class="modal-overlay" id="donateModal">
         <div class="modal">
             <button class="modal-close" onclick="closeModal('donateModal')">✕</button>
-            <h2>⭐ Поддержать игру</h2>
-            <p class="donate-note" style="margin-top:8px;">Нравится крутить номера? Поддержи разработку звёздами Telegram — это помогает добавлять новые регионы, номера и фишки.</p>
-            <div class="donate-grid">
-                <button class="donate-amount" onclick="donate(10)">10 ⭐<small>Спасибо!</small></button>
-                <button class="donate-amount" onclick="donate(50)">50 ⭐<small>Круто!</small></button>
-                <button class="donate-amount" onclick="donate(100)">100 ⭐<small>Огонь 🔥</small></button>
-                <button class="donate-amount" onclick="donate(250)">250 ⭐<small>Магнат</small></button>
-                <button class="donate-amount" onclick="donate(500)" style="grid-column: span 2;">500 ⭐<small>Легенда 👑</small></button>
-            </div>
-            <div class="donate-note">Донат добровольный: игровых товаров и преимуществ за него нет — только тёплое спасибо и значок «⭐ Спонсор» в профиле. Вопросы по оплате — команда /paysupport в боте, условия — /terms.</div>
+            <h2>🛒 Магазин монет</h2>
+            <p class="donate-note" style="margin-top:8px;">Пополни баланс за звёзды Telegram и поддержи разработку. Чем больше пакет — тем выгоднее курс. К любой покупке — значок «⭐ Спонсор» в профиле.</p>
+            <div class="donate-grid" id="donateGrid"></div>
+            <div class="donate-note">Монеты зачисляются сразу после оплаты. Они виртуальные, не имеют реальной ценности и возврату не подлежат. Вопросы по оплате — /paysupport в боте, условия — /terms.</div>
             <div id="donateTotal"></div>
-            <div class="donate-outside" id="donateOutside">💡 Оплата звёздами работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
+            <div class="donate-outside" id="donateOutside">💡 Покупка за звёзды работает внутри Telegram.<br>Открой игру через бота: <a href="https://t.me/randomnomerrf_bot?start=donate" target="_blank" rel="noopener">@randomnomerrf_bot</a></div>
         </div>
     </div>
 
@@ -1109,6 +1113,11 @@
                 clearTimeout(saveTimer);
                 saveTimer = setTimeout(cloudSaveNow, 2000);
             }
+            function saveNow() { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); }
+            function startParam() {
+                const sp = inTG && WA.initDataUnsafe && WA.initDataUnsafe.start_param;
+                return sp || (location.hash || '').replace('#', '') || null;
+            }
             function flush() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; cloudSaveNow(); } }
 
             /* ---- BackButton closes the top-most modal ---- */
@@ -1149,7 +1158,7 @@
                 // block pinch-zoom gestures on iOS
                 ['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
 
-                if (!inTG) { hideBoot(); return; }
+                if (!inTG) { hideBoot(); if (startParam() === 'shop' && typeof openDonate === 'function') openDonate(); return; }
 
                 try { WA.ready(); WA.expand(); } catch (e) {}
                 if (ver('7.7') && WA.disableVerticalSwipes) { try { WA.disableVerticalSwipes(); } catch (e) {} }
@@ -1183,28 +1192,43 @@
                 }
                 hideBoot();
                 greet();
+                if (startParam() === 'shop' && typeof openDonate === 'function') setTimeout(openDonate, 300);
             }
 
-            return { inTG, userId, haptic, setClosingConfirmation, scheduleCloudSave, boot, canPay, openInvoice };
+            return { inTG, userId, haptic, setClosingConfirmation, scheduleCloudSave, boot, canPay, openInvoice, saveNow };
         })();
 
-        /* ===== Донаты Telegram Stars (добровольная поддержка, без игровых наград) ===== */
-        const DONATE_LINKS = {"10": "https://t.me/$kyH7Tz1o-FbvBAAAZ7Agg4COvzA", "50": "https://t.me/$vbfZ_D1o-FbwBAAArDH_14GQvyk", "100": "https://t.me/$9bWq6T1o-FbxBAAAS11hauMlsEA", "250": "https://t.me/$K7Uutj1o-FbyBAAAVFnhfsvbcEU", "500": "https://t.me/$OscviD1o-FbzBAAA-VMI0b3v9bU"};
+        /* ===== Магазин монет за Telegram Stars ===== */
+        const COIN_PACKS = [{"stars": 10, "coins": 1200, "bonus": 0, "hit": false, "link": "https://t.me/$Ugnq2T1o-Fb1BAAA9UwTD4TfXck"}, {"stars": 50, "coins": 6600, "bonus": 10, "hit": false, "link": "https://t.me/$_0oRvT1o-Fb2BAAAH0FIjoyqPq0"}, {"stars": 100, "coins": 14400, "bonus": 20, "hit": true, "link": "https://t.me/$T59n0D1o-Fb3BAAApJ42BwWSgHc"}, {"stars": 250, "coins": 39000, "bonus": 30, "hit": false, "link": "https://t.me/$wleZsD1o-Fb4BAAAEWYxyoSJrP0"}, {"stars": 500, "coins": 84000, "bonus": 40, "hit": false, "link": "https://t.me/$DKyN9j1o-Fb5BAAA759ogh4cKoE"}];   // [{stars, coins, bonus, hit, link}]
         const DONATE_BOT_LINK = 'https://t.me/randomnomerrf_bot?start=donate';
         let donateBusy = false;
 
         function renderSponsorBadge() {
             const s = profile && profile.sponsor;
+            const has = !!(s && s.stars > 0);
             const badge = document.getElementById('sponsorBadge');
-            if (badge) badge.style.display = s && s.stars > 0 ? 'inline-flex' : 'none';
+            if (badge) badge.style.display = has ? 'inline-flex' : 'none';
             const total = document.getElementById('donateTotal');
             if (total) {
-                total.style.display = s && s.stars > 0 ? 'block' : 'none';
-                if (s && s.stars > 0) total.textContent = `💛 Ты уже поддержал игру на ${s.stars} ⭐ — спасибо!`;
+                total.style.display = has ? 'block' : 'none';
+                if (has) total.textContent = `💛 Ты Спонсор: поддержал игру на ${s.stars} ⭐ — спасибо!`;
             }
         }
 
+        function renderShop() {
+            const grid = document.getElementById('donateGrid');
+            if (!grid || grid.childElementCount) return;
+            grid.innerHTML = COIN_PACKS.map((p, i) => `
+                <button class="donate-amount${p.hit ? ' hit' : ''}${i === COIN_PACKS.length - 1 ? ' wide' : ''}" data-stars="${p.stars}" onclick="buyCoins(${p.stars})">
+                    ${p.hit ? '<span class="pack-tag hit-tag">🔥 Хит</span>' : (p.bonus ? `<span class="pack-tag">+${p.bonus}% бонус</span>` : '')}
+                    <span class="pack-coins">${p.coins.toLocaleString('ru-RU')} 💰</span>
+                    <span class="pack-price">${p.stars} ⭐</span>
+                    ${p.hit && p.bonus ? `<small>+${p.bonus}% бонус</small>` : ''}
+                </button>`).join('');
+        }
+
         function openDonate() {
+            renderShop();
             const outside = document.getElementById('donateOutside');
             if (outside) outside.style.display = TGApp.canPay() ? 'none' : 'block';
             renderSponsorBadge();
@@ -1212,30 +1236,40 @@
             TGApp.haptic('select');
         }
 
-        function donate(amount) {
-            const link = DONATE_LINKS[String(amount)];
-            if (!link) return;
+        function creditPack(pack) {
+            coins += pack.coins;
+            const s = profile.sponsor || { stars: 0, coins: 0, n: 0 };
+            profile.sponsor = { stars: (s.stars || 0) + pack.stars, coins: (s.coins || 0) + pack.coins, n: (s.n || 0) + 1, ts: Date.now() };
+            updateCoinsDisplay();
+            saveData();          // localStorage сразу
+            TGApp.saveNow();     // CloudStorage сразу, без задержки
+            renderSponsorBadge();
+        }
+
+        function buyCoins(stars) {
+            const pack = COIN_PACKS.find(p => p.stars === stars);
+            if (!pack) return;
             if (!TGApp.canPay()) {
                 document.getElementById('donateOutside').style.display = 'block';
-                showToast('Донат звёздами работает в Telegram — открой игру через бота', '⭐');
+                showToast('Покупка за звёзды работает в Telegram — открой игру через бота', '⭐');
                 return;
             }
             if (donateBusy) return;
             donateBusy = true;
             TGApp.haptic('light');
-            TGApp.openInvoice(link, (status) => {
+            let handled = false;     // ровно одно зачисление на одно открытие счёта
+            TGApp.openInvoice(pack.link, (status) => {
+                if (handled) return;
+                handled = true;
                 donateBusy = false;
                 if (status === 'paid') {
-                    const prev = (profile.sponsor && profile.sponsor.stars) || 0;
-                    profile.sponsor = { stars: prev + amount, ts: Date.now() };
-                    saveData();
-                    renderSponsorBadge();
+                    creditPack(pack);
                     TGApp.haptic('success');
-                    showToast(`Спасибо за поддержку: ${amount} ⭐! Ты — Спонсор 💛`, '⭐');
+                    showToast(`+${pack.coins.toLocaleString('ru-RU')} 💰 зачислено! Спасибо за поддержку 💛`, '⭐');
                 } else if (status === 'failed') {
                     showToast('Оплата не прошла. Попробуй ещё раз', '⚠️');
                 } else if (status === 'pending') {
-                    showToast('Платёж обрабатывается…', '⏳');
+                    showToast('Платёж обрабатывается… Если звёзды списались, а монет нет — напиши /paysupport в боте', '⏳');
                 }
             });
         }
