@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta name="x-build" content="beta-4">
+    <meta name="x-build" content="beta-5">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -942,6 +942,41 @@
         .top-row .tr-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .top-row .tr-pts { color: var(--coin, #fbbf24); font-weight: bold; }
         .share-img { width: 100%; border-radius: 14px; margin: 6px 0; }
+    
+        .tab-btn .ti + span { white-space: nowrap; }
+        .mk-wallet { display: flex; align-items: center; gap: 8px; padding: 12px; border-radius: 14px; margin-bottom: 10px;
+                     background: linear-gradient(135deg, rgba(16,185,129,0.16), rgba(59,130,246,0.12)); border: 1px solid rgba(16,185,129,0.45); }
+        .mk-wallet > div { flex: 1; text-align: left; }
+        .mk-wallet small { display: block; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .mk-wallet b { font-size: 1.25rem; color: var(--coin, #fbbf24); }
+        .mk-wallet button { width: 42px; height: 42px; border-radius: 12px; border: none; font-size: 1.1rem; cursor: pointer; background: var(--accent); color: #fff; }
+        .mk-wallet button:disabled, .mk-buy:disabled { opacity: 0.45; cursor: default; }
+        .mk-warn { font-size: 0.8rem; padding: 9px 10px; border-radius: 12px; margin-bottom: 10px; background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.5); }
+        .mk-tabs, .mk-chips { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+        .mk-tabs button, .mk-chips button { flex: 1; padding: 8px 6px; border-radius: 10px; font-weight: 700; font-size: 0.78rem; cursor: pointer;
+                     border: 1px solid var(--border, rgba(255,255,255,0.15)); background: var(--card-inner, rgba(255,255,255,0.05)); color: inherit; white-space: nowrap; }
+        .mk-tabs button.on, .mk-chips button.on { background: var(--accent); color: #fff; border-color: transparent; }
+        .mk-row { display: flex; gap: 6px; margin-bottom: 8px; }
+        .mk-in { flex: 1; min-width: 0; padding: 9px 10px; border-radius: 10px; font-size: 0.9rem; user-select: text; -webkit-user-select: text;
+                 border: 1px solid var(--border, rgba(255,255,255,0.15)); background: var(--card-inner, rgba(255,255,255,0.05)); color: inherit; }
+        .mk-in.wide { width: 100%; box-sizing: border-box; margin: 6px 0; font-size: 1.1rem; text-align: center; }
+        .mk-sort { flex: 0 0 96px; }
+        .mk-go { flex: 0 0 42px; border-radius: 10px; border: none; background: var(--accent); color: #fff; cursor: pointer; }
+        .mk-item { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; margin-bottom: 6px; text-align: left;
+                   background: var(--card-bg, rgba(255,255,255,0.04)); border: 1px solid var(--border, rgba(255,255,255,0.12)); }
+        .mk-pl { flex: 1; min-width: 0; }
+        .mk-pl b { display: block; font-family: monospace; font-size: 1rem; letter-spacing: 0.04em; }
+        .mk-pl small { display: inline-block; font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-top: 2px; }
+        .mk-pl small.mk-who { display: block; color: var(--muted); font-weight: 400; padding: 0; }
+        .mk-buy { flex: 0 0 auto; padding: 9px 12px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; background: var(--good, #10b981); color: #fff; }
+        .mk-buy.alt { background: var(--card-inner, rgba(255,255,255,0.08)); color: inherit; border: 1px solid var(--border, rgba(255,255,255,0.15)); }
+        .mk-empty { padding: 22px 8px; text-align: center; color: var(--muted); font-size: 0.85rem; }
+        .mk-h { font-size: 0.9rem; margin: 12px 0 6px; text-align: left; }
+        .mk-deal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; padding: 7px 4px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.08)); font-size: 0.85rem; text-align: left; }
+        .mk-deal b { font-family: monospace; }
+        .mk-deal span { margin-left: auto; font-weight: 800; color: var(--coin, #fbbf24); }
+        .mk-deal small { width: 100%; color: var(--muted); font-size: 0.7rem; }
+        .mk-rules { margin-top: 14px; }
     </style>
 </head>
 <body>
@@ -1035,6 +1070,12 @@
             <div class="tab-actions"><button onclick="openInventory()">📦 Инвентарь</button><button onclick="TabBar.go('game')">🎲 К прокруту</button></div>
         </section>
 
+        <section class="tab-panel" id="tab-market" data-tab="market" role="tabpanel">
+            <h2 class="tab-title">🏪 Рынок номеров</h2>
+            <p class="feat-p" style="margin-top:-4px">Продавай редкие номера другим игрокам и лови чужие легенды 🔥</p>
+            <div id="mkBody"></div>
+        </section>
+
         <section class="tab-panel" id="tab-shop" data-tab="shop" role="tabpanel"><div class="modal-like">
             <h2>🛒 Магазин монет</h2>
             <p class="donate-note" style="margin-top:8px;">Пополни баланс за звёзды Telegram и поддержи разработку. Чем больше пакет — тем выгоднее курс. К любой покупке — значок «⭐ Спонсор» в профиле.</p>
@@ -1114,10 +1155,11 @@
         <div class="tabbar-inner">
             <button class="tab-btn active" data-tab="game" id="tabBtn-game" role="tab" aria-selected="true" onclick="TabBar.go('game')"><span class="ti">🎰</span><span>Игра</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="history" id="tabBtn-history" role="tab" aria-selected="false" onclick="TabBar.go('history')"><span class="ti">📜</span><span>История</span><span class="tab-dot"></span></button>
+            <button class="tab-btn" data-tab="market" id="tabBtn-market" role="tab" aria-selected="false" onclick="TabBar.go('market')"><span class="ti">🏪</span><span>Рынок</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
-            <span class="beta-tag" id="betaTag">ТЕСТ · b4</span>
+            <span class="beta-tag" id="betaTag">ТЕСТ · b5</span>
         </div>
     </nav>
 
@@ -1466,6 +1508,7 @@
             function go(name) {
                 if (name === 'shop') return openDonate();
                 if (name === 'profile') return openProfile();
+                if (name === 'market') { try { Market.open(); } catch (e) {} }
                 if (name === 'bonus') { try { renderTechno(); PromoUI.render(); Feat.render(); } catch (e) {} }
                 show(name);
             }
@@ -1493,14 +1536,14 @@
                 try { if (WA && WA.onEvent) { WA.onEvent('safeAreaChanged', syncSafeArea); WA.onEvent('contentSafeAreaChanged', syncSafeArea); } } catch (e) {}
             }
             // Открыть нужную вкладку по ссылке: startapp=bonus, ?tab=bonus или #bonus (shop/bonus/promo/history/profile/game)
-            const LINK_TABS = ['game', 'history', 'shop', 'bonus', 'profile'];
+            const LINK_TABS = ['game', 'history', 'market', 'shop', 'bonus', 'profile'];
             function deepLink(p) {
                 p = String(p || '').toLowerCase();
                 if (!p) return null;
                 try {
                     if (p === 'shop' && typeof openDonate === 'function') { openDonate(); return 'shop'; }
                     if (p === 'promo') { show('bonus'); if (typeof PromoUI !== 'undefined') PromoUI.open(); return 'promo'; }
-                    if (LINK_TABS.indexOf(p) >= 0) { show(p); return p; }
+                    if (LINK_TABS.indexOf(p) >= 0) { show(p); if (p === 'market') { try { Market.open(); } catch (e) {} } return p; }
                 } catch (e) {}
                 return null;
             }
@@ -1704,7 +1747,7 @@
             const POSTS = [{"id": 771, "url": "https://t.me/tehnomania1/771", "title": "Морозильный ларь Kraft BD(W)-102BL", "price": 13000, "img": "771.jpg", "sub": "105 л, до −24 °C, держит холод 17 ч без света"}, {"id": 769, "url": "https://t.me/tehnomania1/769", "title": "Встраиваемая техника Hiberg в чёрном стекле", "price": 26000, "img": "769.jpg", "sub": "Газовая варочная + духовой шкаф, WOK-конфорка"}, {"id": 767, "url": "https://t.me/tehnomania1/767", "title": "Стирка и сушка Midea", "price": 44000, "img": "767.jpg", "sub": "Стиралка + сушилка с тепловым насосом, 9 кг, Wi-Fi"}, {"id": 765, "url": "https://t.me/tehnomania1/765", "title": "Стиральная машина Beko RSPE78612W", "price": 24500, "img": "765.jpg", "sub": "7 кг, пар SteamCure, инверторный мотор"}, {"id": 762, "url": "https://t.me/tehnomania1/762", "title": "Комплект встраиваемой техники Gorenje", "price": 24000, "img": "762.jpg", "sub": "Варочная, духовка и микроволновка в комплекте"}, {"id": 760, "url": "https://t.me/tehnomania1/760", "title": "Комплект Hiberg в ретро-стиле", "price": 27000, "img": "760.jpg", "sub": "Бежевая варочная и духовка — винтажный вайб"}];            // запасная витрина, если сервер недоступен
             const DAILY = [100, 150, 200, 300, 400, 600, 1000];
             let S = null;                               // состояние из /api/hello
-            let rolls = 0, rare = [], flushT = null, timerT = null, claiming = false;
+            let rolls = 0, rare = [], gone = [], flushT = null, timerT = null, claiming = false;
 
             const WA = () => window.Telegram && window.Telegram.WebApp;
             function initData() { try { return (WA() && WA().initData) || ''; } catch (e) { return ''; } }
@@ -1734,6 +1777,21 @@
 
             async function take(token) {
                 try { return await GrantRedeemer.redeem(token, { quiet: true }); } catch (e) { return null; }
+            }
+            /* ссылки рынка (выручка, вывод, купленный номер) сервер шлёт, пока игра не подтвердит получение */
+            const MK_SRC = ['market', 'wallet', 'mkplate'];
+            function nonceOf(token) {
+                try { let s = String(token).split('.')[0].replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '=';
+                      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(s), c => c.charCodeAt(0)))).nonce; } catch (e) { return null; }
+            }
+            async function takeAll(list) {
+                const acks = [];
+                for (const x of (list || [])) {
+                    const r = await take(x.token);
+                    if (r && (r.status === 'ok' || r.status === 'already') && MK_SRC.indexOf(x.src) >= 0) { const n = nonceOf(x.token); if (n) acks.push(n); }
+                }
+                if (acks.length) await api('market/ack', { nonces: acks });
+                return acks.length;
             }
             function openLink(url) { try { technoOpen(url); } catch (e) {} }
 
@@ -1774,7 +1832,7 @@
                 if (!h || !h.ok) return;
                 S = h;
                 render();
-                for (const x of (h.tokens || [])) await take(x.token);    // монеты, которые не успели зачислиться
+                await takeAll(h.tokens);    // монеты (и номера с рынка), которые не успели зачислиться
                 document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
                 try { WA().onEvent('deactivated', flush); } catch (e) {}
             }
@@ -1953,11 +2011,18 @@
                 if (plate.val && plate.val.isRare && rare.length < 50) rare.push(plate.fullText);
                 if (!flushT) flushT = setTimeout(flush, 20000);
             }
+            /* редкий номер продан системе — на рынок его уже не выставить */
+            function onGone(full) {
+                if (!on() || !full || gone.length >= 50) return;
+                gone.push(full);
+                if (!flushT) flushT = setTimeout(flush, 20000);
+            }
             async function flush() {
                 if (flushT) { clearTimeout(flushT); flushT = null; }
-                if (!rolls || !on()) return;
+                if ((!rolls && !gone.length) || !on()) return;
                 const body = { rolls, plates: rare };
-                rolls = 0; rare = [];
+                if (gone.length) body.gone = gone;
+                rolls = 0; rare = []; gone = [];
                 const r = await api('progress', body);
                 if (r && r.ok && S && S.top) { S.top.me = r.me; render(); }
             }
@@ -2005,8 +2070,273 @@
             }
 
             return { init, render, hasNew, on, openDaily, claimDaily, openTechno, openPost, claimTechno, openInvite, sendInvite,
-                     copyInvite, openTop, onRoll, flush, renderPlate, share, shareText, shareChat, shareStory, _last: null,
+                     copyInvite, openTop, onRoll, onGone, flush, api, take, takeAll, renderPlate, share, shareText, shareChat, shareStory, _last: null,
                      _state: () => S };
+        })();
+
+        /* ===== 🏪 Рынок номеров: игроки продают друг другу редкие номера =====
+           Монеты для покупок лежат в «кошельке рынка» на сервере (пополнение из игры с дневным лимитом).
+           Купленный номер и выручка приходят подписанными ссылками (GrantRedeemer), как подарки из бота. */
+        const Market = (() => {
+            let S = null, view = 'buy', loading = false, imported = false, sel = null;
+            const F = { rarity: '', q: '', sort: 'new' };
+            const $ = id => document.getElementById(id);
+            const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const fmt = n => Number(n || 0).toLocaleString('ru-RU');
+            const RN = { rare: 'Редкий ⚡', epic: 'Эпический 🔥', legend: 'Легендарный ✨' };
+            const RC = { rare: 'rarity-rare', epic: 'rarity-epic', legend: 'rarity-legend' };
+            const api = (p, b) => Feat.api('market/' + p, b);
+            const save = () => { try { saveData(); TGApp.saveNow(); } catch (e) {} };
+
+            function errText(r) {
+                const e = r && r.error;
+                const T = {
+                    age: `Рынок откроется через ${Math.max(1, Math.ceil((r.age_left || 0) / 3600))} ч — новичкам сутки на разгон 😉`,
+                    rolls: `Сделай ещё ${r.rolls_left || 0} прокрутов — и рынок твой 🎰`,
+                    frozen: 'Торговля для тебя приостановлена модератором 🧊',
+                    funds: `В кошельке рынка не хватает${r.need ? ' ' + fmt(r.need) + ' 💰' : ''} — пополни его`,
+                    dep_limit: `Лимит пополнения на сегодня — осталось ${fmt(r.left)} 💰`,
+                    wallet_max: `Кошелёк почти полон — влезет ещё ${fmt(r.left)} 💰`,
+                    price: `Цена для такого номера — от ${fmt(r.min)} до ${fmt(r.max)} 💰`,
+                    max_active: `Максимум ${r.max} лотов одновременно — сними какой-нибудь`,
+                    list_limit: `На сегодня выставлено достаточно (${r.max}) — завтра ещё`,
+                    buy_limit: `Сегодня уже ${r.max} покупок — хватит шопинга до завтра 😅`,
+                    not_owned: 'Этот номер нельзя выставить: он выбит до запуска рынка или уже продан',
+                    fee: `Нужно ${fmt(r.fee)} 💰 в кошельке рынка за выставление`,
+                    gone: 'Опоздал — номер уже купили или сняли 😬',
+                    self: 'Свой номер купить нельзя 😄',
+                    not_found: 'Лот не найден',
+                    common: 'На рынок можно только редкие, эпические и легендарные номера',
+                    rate: 'Слишком быстро! Подожди пару секунд',
+                };
+                return T[e] || 'Что-то пошло не так — попробуй ещё раз';
+            }
+            const offline = () => showToast('Сервер рынка не отвечает — попробуй чуть позже', '📡');
+
+            /* ---------- данные ---------- */
+            async function load(quiet) {
+                if (!Feat.on()) { S = null; render(); return; }
+                if (loading) return;
+                loading = true;
+                try {
+                    await retryDeposit();
+                    const r = await api('state', F);
+                    if (!r || !r.ok) { if (!quiet) offline(); if (!S) renderOffline(); return; }
+                    S = r;
+                    if (r.tokens && r.tokens.length) { await Feat.takeAll(r.tokens); refreshInv(); }
+                    if (r.import && !imported) await doImport();
+                    render();
+                } finally { loading = false; }
+            }
+            async function doImport() {
+                imported = true;
+                const plates = inventory.filter(i => i.val && i.val.isRare).map(i => i.fullText);
+                const r = await api('import', { plates });
+                if (r && r.ok) {
+                    S.owned = r.owned; S.import = false;
+                    if (r.imported.length) showToast(`На рынок можно выставить ${r.imported.length} твоих номеров 🔥`, '🏪');
+                }
+            }
+            function refreshInv() {
+                try { updateInvCounter(); } catch (e) {}
+                try { if (document.getElementById('inventoryModal') && document.getElementById('inventoryModal').classList.contains('open')) renderInventory(); } catch (e) {}
+            }
+            /* номера из инвентаря, которые сервер разрешает выставить (с учётом количества) */
+            function sellable() {
+                const left = Object.assign({}, (S && S.owned) || {});
+                const out = [];
+                for (const it of inventory) {
+                    if (!it.val || !it.val.isRare || !left[it.fullText]) continue;
+                    left[it.fullText]--;
+                    out.push(it);
+                }
+                return out;
+            }
+            function rk(it) { return it.val.isLegend ? 'legend' : (it.val.isEpic ? 'epic' : 'rare'); }
+
+            /* ---------- отрисовка ---------- */
+            function open() { render(); load(true); }
+            function renderOffline() {
+                const box = $('mkBody'); if (!box) return;
+                box.innerHTML = `<div class="mk-empty">📡 Рынок сейчас не отвечает. Загляни чуть позже</div>`;
+            }
+            function card(l) {
+                const btn = l.mine ? `<button class="mk-buy alt" onclick="Market.cancel(${l.id})">Снять</button>`
+                                   : `<button class="mk-buy" onclick="Market.buyAsk(${l.id})">${fmt(l.price)} 💰</button>`;
+                return `<div class="mk-item"><div class="mk-pl"><b>${esc(l.plate)}</b><small class="${RC[l.rarity] || ''}">${RN[l.rarity] || ''}</small>
+                        <small class="mk-who">${l.mine ? 'твой лот · ' + fmt(l.price) + ' 💰' : 'продаёт ' + esc(l.seller)}</small></div>${btn}</div>`;
+            }
+            function render() {
+                const box = $('mkBody'); if (!box) return;
+                if (!Feat.on()) { box.innerHTML = `<div class="mk-empty">🏪 Рынок работает в игре из Telegram — открой её через @randomnomerrf_bot</div>`; return; }
+                if (!S) { box.innerHTML = `<div class="mk-empty">Загружаю рынок… ⏳</div>`; return; }
+                const w = S.wallet, e = S.elig, R = S.rules;
+                let warn = '';
+                if (!e.ok) warn = `<div class="mk-warn">${errText({ error: e.reason, age_left: e.age_left, rolls_left: e.rolls_left })}</div>`;
+                const tabs = [['buy', '🛒 Купить'], ['mine', '🏷 Мои лоты'], ['deals', '📊 Сделки']]
+                    .map(([k, t]) => `<button class="${view === k ? 'on' : ''}" onclick="Market.view('${k}')">${t}</button>`).join('');
+                let body = '';
+                if (view === 'buy') {
+                    const chips = [['', 'Все'], ['rare', '⚡ Редкие'], ['epic', '🔥 Эпик'], ['legend', '✨ Легенды']]
+                        .map(([k, t]) => `<button class="${F.rarity === k ? 'on' : ''}" onclick="Market.filter('rarity','${k}')">${t}</button>`).join('');
+                    body = `<div class="mk-chips">${chips}</div>
+                        <div class="mk-row"><input id="mkQ" class="mk-in" placeholder="Регион или буквы: 77, А777" value="${esc(F.q)}" maxlength="10"
+                            onkeydown="if(event.key==='Enter')Market.filter('q',this.value)"><button class="mk-go" onclick="Market.filter('q',document.getElementById('mkQ').value)">🔎</button>
+                        <select class="mk-in mk-sort" onchange="Market.filter('sort',this.value)">${[['new', 'Новые'], ['cheap', 'Дешевле'], ['expensive', 'Дороже']]
+                            .map(([k, t]) => `<option value="${k}"${F.sort === k ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+                        ${S.listings.length ? S.listings.map(card).join('') : '<div class="mk-empty">Пока пусто 🤷 Выставь свой номер первым!</div>'}`;
+                } else if (view === 'mine') {
+                    const n = sellable().length;
+                    body = `<button class="feat-btn" onclick="Market.sellPick()" ${e.ok ? '' : 'disabled'}>🏷 Выставить номер${n ? ' (' + n + ')' : ''}</button>
+                        <div class="feat-p small">Лотов: ${S.limits.active} из ${R.max_active} · выставлено сегодня ${S.limits.listed_today}/${R.list_day} · лот висит ${R.ttl_days} дн.</div>
+                        ${S.mine.length ? S.mine.map(card).join('') : '<div class="mk-empty">У тебя нет лотов. Выставь редкий номер — кто-то точно захочет 😎</div>'}`;
+                } else {
+                    body = `<h3 class="mk-h">🔥 Свежие сделки</h3>${S.deals.length ? S.deals.map(d => `<div class="mk-deal"><b>${esc(d.plate)}</b> <span class="${RC[d.rarity] || ''}">${fmt(d.price)} 💰</span><small>${esc(d.seller)} → ${esc(d.buyer)}</small></div>`).join('') : '<div class="mk-empty">Сделок ещё не было</div>'}
+                        <h3 class="mk-h">👑 Топ продавцов недели</h3>${S.sellers.length ? S.sellers.map((x, i) => `<div class="mk-deal"><b>${i + 1}. ${esc(x.name)}</b> <span>${fmt(x.sum)} 💰</span><small>${x.deals} сделок</small></div>`).join('') : '<div class="mk-empty">Стань первым 💪</div>'}`;
+                }
+                box.innerHTML = `<div class="mk-wallet"><div><small>Кошелёк рынка</small><b id="mkBal">${fmt(w.bal)} 💰</b></div>
+                        <button onclick="Market.depositAsk()" ${e.ok ? '' : 'disabled'}>➕</button><button onclick="Market.withdraw()" ${w.bal > 0 ? '' : 'disabled'}>➖</button></div>
+                    ${warn}<div class="mk-tabs">${tabs}</div>${body}
+                    <div class="feat-p small mk-rules">Комиссия ${R.fee_pct}% с продажи сгорает · выставление ${R.list_fee_min}+ 💰 (${R.list_fee_pct}% цены) · до ${R.buy_day} покупок в день · торговать можно через ${R.min_age_h} ч после старта</div>`;
+            }
+            function setView(v) { view = v; render(); }
+            function filter(k, v) { F[k] = String(v || '').slice(0, 10); load(); }
+
+            /* ---------- кошелёк ---------- */
+            function newNonce() { const a = new Uint8Array(12); crypto.getRandomValues(a); return Array.from(a, b => ('0' + b.toString(16)).slice(-2)).join(''); }
+            function depositAsk() {
+                if (!S) return;
+                const left = Math.max(0, Math.min(S.wallet.dep_cap - S.wallet.dep_today, S.wallet.max - S.wallet.bal, coins));
+                Feat._mkLeft = left;
+                feModal('mkDepModal', `<div class="feat-ic">💰</div><h2>Пополнить кошелёк</h2>
+                    <p class="feat-p">Монеты из игры уходят в кошелёк рынка — с него покупаешь номера. Сегодня можно ещё <b>${fmt(Math.max(0, S.wallet.dep_cap - S.wallet.dep_today))}</b> 💰</p>
+                    <input id="mkDepIn" class="mk-in wide" type="number" inputmode="numeric" min="1" placeholder="Сколько монет?">
+                    <div class="mk-chips">${[1000, 5000, 10000].map(v => `<button onclick="document.getElementById('mkDepIn').value=${Math.min(v, left)}">${fmt(v)}</button>`).join('')}<button onclick="document.getElementById('mkDepIn').value=${left}">Макс</button></div>
+                    <button class="feat-btn" onclick="Market.deposit(parseInt(document.getElementById('mkDepIn').value,10))">Пополнить</button>`);
+            }
+            const FINAL = r => r && r.error && ['rate', 'http', 'server', 'auth'].indexOf(r.error) < 0;
+            async function sendDeposit() {
+                const p = profile.mkDep; if (!p) return null;
+                const r = await api('deposit', { amount: p.amount, nonce: p.nonce });
+                if (r && r.ok) { profile.mkDep = null; save(); if (S) S.wallet = r.wallet; return r; }
+                if (FINAL(r)) {               // сервер отказал — монеты возвращаем
+                    coins += p.amount; profile.mkDep = null; updateCoinsDisplay(); save();
+                    return r;
+                }
+                return null;                  // нет связи: попробуем ещё раз с тем же nonce (двойного зачисления не будет)
+            }
+            async function retryDeposit() { if (profile.mkDep) await sendDeposit(); }
+            async function deposit(amount) {
+                if (!Number.isSafeInteger(amount) || amount <= 0) return showToast('Введи количество монет', '💰');
+                if (amount > coins) return showToast('Столько монет у тебя нет 😅', '💰');
+                if (profile.mkDep) { await retryDeposit(); if (profile.mkDep) return showToast('Прошлое пополнение ещё в пути — попробуй чуть позже', '📡'); }
+                coins -= amount; updateCoinsDisplay();
+                profile.mkDep = { nonce: newNonce(), amount, ts: Date.now() };
+                save();
+                const r = await sendDeposit();
+                if (r && r.ok) { closeModal('mkDepModal'); showToast(`+${fmt(amount)} 💰 в кошельке рынка`, '🏪'); TGApp.haptic('success'); render(); }
+                else if (r) showToast(errText(r) + ' · монеты вернули', '⚠️');
+                else showToast('Связь пропала — допроверим позже, монеты не потеряются', '📡');
+            }
+            async function withdraw() {
+                if (!S || !S.wallet.bal) return;
+                const r = await api('withdraw', {});
+                if (!r) return offline();
+                if (!r.ok) return showToast(errText(r), '⚠️');
+                S.wallet = r.wallet;
+                await Feat.takeAll([{ token: r.token, src: 'wallet' }]);
+                render();
+            }
+
+            /* ---------- продать ---------- */
+            function feModal(id, html) {
+                let ov = $(id);
+                if (!ov) { ov = document.createElement('div'); ov.className = 'modal-overlay'; ov.id = id; document.body.appendChild(ov); }
+                ov.innerHTML = `<div class="modal feat-modal"><button class="modal-close" onclick="closeModal('${id}')">✕</button>${html}</div>`;
+                openModal(id);
+            }
+            async function sellPick(full) {
+                if (!Feat.on()) return showToast('Рынок работает в игре из Telegram', '🏪');
+                if (!S) await load();
+                if (!S) return;
+                if (!S.elig.ok) return showToast(errText({ error: S.elig.reason, age_left: S.elig.age_left, rolls_left: S.elig.rolls_left }), '🏪');
+                const list = sellable();
+                if (full) {
+                    const it = list.find(x => x.fullText === full);
+                    if (!it) return showToast(errText({ error: 'not_owned' }), '🏷');
+                    return priceAsk(it);
+                }
+                feModal('mkSellModal', `<div class="feat-ic">🏷</div><h2>Что продаём?</h2>
+                    ${list.length ? list.map((it, i) => `<div class="mk-item"><div class="mk-pl"><b>${esc(it.fullText)}</b><small class="${it.val.rarityClass}">${esc(it.val.rarity)}</small></div>
+                        <button class="mk-buy" onclick="Market._pick(${i})">Выбрать</button></div>`).join('')
+                        : '<p class="feat-p">Нет номеров для рынка. Выбивай редкие номера и сохраняй их в инвентарь 📦</p>'}`);
+                Market._list = list;
+            }
+            function priceAsk(it) {
+                const k = rk(it), b = S.rules.price[k];
+                sel = it;
+                const def = Math.min(b[1], Math.max(b[0], it.val.sellCoins * 2));
+                feModal('mkSellModal', `<div class="feat-ic">🏷</div><h2>${esc(it.fullText)}</h2>
+                    <p class="feat-p"><span class="${RC[k]}">${RN[k]}</span> · системе продаётся за ${fmt(it.val.sellCoins)} 💰</p>
+                    <input id="mkPrice" class="mk-in wide" type="number" inputmode="numeric" min="${b[0]}" max="${b[1]}" value="${def}" oninput="Market._fee()">
+                    <p class="feat-p small">Цена от ${fmt(b[0])} до ${fmt(b[1])} 💰</p>
+                    <p class="feat-p" id="mkFee"></p>
+                    <button class="feat-btn" onclick="Market.list()">🚀 Выставить</button>`);
+                fee();
+            }
+            function fee() {
+                const p = parseInt(($('mkPrice') || {}).value, 10) || 0, R = S.rules;
+                const lf = Math.max(R.list_fee_min, Math.floor(p * R.list_fee_pct / 100)), sf = Math.max(1, Math.round(p * R.fee_pct / 100));
+                const e = $('mkFee'); if (e) e.innerHTML = `Получишь <b>${fmt(Math.max(0, p - sf))} 💰</b> (комиссия ${R.fee_pct}% сгорит).<br>За выставление — ${fmt(lf)} 💰 из кошелька рынка (у тебя ${fmt(S.wallet.bal)}).`;
+            }
+            async function list() {
+                if (!sel) return;
+                const price = parseInt(($('mkPrice') || {}).value, 10);
+                const r = await api('list', { plate: sel.fullText, price });
+                if (!r) return offline();
+                if (!r.ok) return showToast(errText(r), '⚠️');
+                const idx = inventory.indexOf(sel) >= 0 ? inventory.indexOf(sel) : inventory.findIndex(x => x.fullText === sel.fullText);
+                if (idx >= 0) inventory.splice(idx, 1);
+                save(); refreshInv();
+                closeModal('mkSellModal');
+                TGApp.haptic('success');
+                showToast(`${sel.fullText} на рынке! Ждём покупателя 🔥`, '🏪');
+                sel = null; view = 'mine';
+                await load(true);
+            }
+            async function cancel(id) {
+                const r = await api('cancel', { id });
+                if (!r) return offline();
+                if (!r.ok) return showToast(errText(r), '⚠️');
+                await Feat.takeAll([{ token: r.token, src: 'mkplate' }]);
+                refreshInv();
+                await load(true);
+            }
+
+            /* ---------- купить ---------- */
+            function buyAsk(id) {
+                const l = S && S.listings.find(x => x.id === id); if (!l) return;
+                feModal('mkBuyModal', `<div class="feat-ic">🛒</div><h2>${esc(l.plate)}</h2>
+                    <p class="feat-p"><span class="${RC[l.rarity]}">${RN[l.rarity]}</span> · продаёт ${esc(l.seller)}</p>
+                    <p class="feat-p">Цена: <b>${fmt(l.price)} 💰</b> из кошелька рынка (у тебя ${fmt(S.wallet.bal)} 💰)</p>
+                    <button class="feat-btn" onclick="Market.buy(${l.id})" ${S.elig.ok ? '' : 'disabled'}>Купить за ${fmt(l.price)} 💰</button>
+                    ${S.wallet.bal < l.price ? `<button class="feat-btn alt" onclick="closeModal('mkBuyModal'); Market.depositAsk()">➕ Пополнить кошелёк</button>` : ''}`);
+            }
+            async function buy(id) {
+                const r = await api('buy', { id });
+                if (!r) return offline();
+                closeModal('mkBuyModal');
+                if (!r.ok) { showToast(errText(r), '⚠️'); return load(true); }
+                if (S) S.wallet = r.wallet;
+                await Feat.takeAll([{ token: r.token, src: 'mkplate' }]);
+                refreshInv();
+                TGApp.haptic('success');
+                showToast(`${r.plate} теперь твой! 🔥`, '🏪');
+                await load(true);
+            }
+
+            return { open, load, render, view: setView, filter, depositAsk, deposit, withdraw, sellPick, list, cancel, buyAsk, buy,
+                     _pick: i => priceAsk(Market._list[i]), _fee: fee, _list: [], _state: () => S };
         })();
 
         const GrantRedeemer = (() => {
@@ -2016,7 +2346,8 @@
             const PROMO_CODE_RE = /^[A-Z0-9_-]{3,32}$/;
             // src — за что монеты (ежедневка, товар дня, друг…). Старые сборки поле игнорируют.
             const SRC_TEXT = { daily: 'ежедневная награда', techno: 'товар дня от Техномании', ref: 'бонус за приглашение друга',
-                               refsub: 'друг подписался на Техноманию', contest: 'конкурс недели' };
+                               refsub: 'друг подписался на Техноманию', contest: 'конкурс недели',
+                               market: 'твой номер купили на рынке', wallet: 'вывод из кошелька рынка' };
 
             function b64ToBytes(s) {
                 s = String(s).replace(/-/g, '+').replace(/_/g, '/');
@@ -2241,6 +2572,10 @@
                 clearToken();
                 if (plates.some(x => x.val.isLegend)) TGApp.haptic('legend'); else TGApp.haptic('success');
                 try { AudioFX.playWin(plates.some(x => x.val.isLegend)); } catch (e) {}
+                if (quiet) {          // номер с рынка (куплен или вернулся с витрины) — без окна «подарок от администрации»
+                    showToast(`Номер ${plates.map(x => x.fullText).join(', ')} в твоём гараже 🔥`, '📦');
+                    return done('ok', { numbers: plates.map(x => x.fullText) });
+                }
                 showGiftModal(plates);
                 showToast(plates.length > 1 ? `Вам выданы номера: ${plates.length} шт.` : `Вам выдан номер ${plates[0].fullText}`, '🎁');
                 return done('ok', { numbers: plates.map(x => x.fullText) });
@@ -2481,18 +2816,18 @@
         };
 
         const achievementDefs = [
-            { id: 'firstRoll', title: 'Первый старт', desc: 'Сделать 1 прокрут', reward: 50, icon: '🎲' },
-            { id: 'rolls50', title: 'Опытный крутильщик', desc: 'Сделать 50 прокрутов', reward: 300, icon: '🎰' },
-            { id: 'rolls200', title: 'Мастер кручения', desc: 'Сделать 200 прокрутов', reward: 1200, icon: '⚡' },
-            { id: 'firstRare', title: 'Удача на пороге', desc: 'Выбить редкий номер', reward: 150, icon: '✨' },
-            { id: 'firstLegend', title: 'Король дорог', desc: 'Выбить легендарный номер', reward: 1000, icon: '👑' },
-            { id: 'rich', title: 'Магнат', desc: 'Накопить 20 000 💰', reward: 2500, icon: '💎' },
-            { id: 'millionaire', title: 'Олигарх', desc: 'Накопить 100 000 💰', reward: 10000, icon: '💰' },
-            { id: 'collector', title: 'Гараж мечты', desc: 'Заполнить 30 слотов инвентаря', reward: 800, icon: '📦' },
-            { id: 'regionHunter', title: 'Путешественник', desc: 'Разблокировать 5 регионов', reward: 1500, icon: '🌍' },
-            { id: 'capitalist', title: 'Автобарыга', desc: 'Заработать всего 50 000 💰', reward: 3000, icon: '📈' },
-            { id: 'luckyStreak', title: 'Фартовый', desc: 'Сделать 5 редких/легендарных выпадений', reward: 2000, icon: '🔥' },
-            { id: 'elite777', title: 'Спецномер', desc: 'Выбить номер с регионом 777 или 999', reward: 2000, icon: '🚨' }
+            { id: 'firstRoll', title: 'Первый старт', desc: 'Сделать 1 прокрут', reward: 20, icon: '🎲' },
+            { id: 'rolls50', title: 'Опытный крутильщик', desc: 'Сделать 50 прокрутов', reward: 100, icon: '🎰' },
+            { id: 'rolls200', title: 'Мастер кручения', desc: 'Сделать 200 прокрутов', reward: 400, icon: '⚡' },
+            { id: 'firstRare', title: 'Удача на пороге', desc: 'Выбить редкий номер', reward: 50, icon: '✨' },
+            { id: 'firstLegend', title: 'Король дорог', desc: 'Выбить легендарный номер', reward: 500, icon: '👑' },
+            { id: 'rich', title: 'Магнат', desc: 'Накопить 20 000 💰', reward: 1000, icon: '💎' },
+            { id: 'millionaire', title: 'Олигарх', desc: 'Накопить 100 000 💰', reward: 3000, icon: '💰' },
+            { id: 'collector', title: 'Гараж мечты', desc: 'Заполнить 30 слотов инвентаря', reward: 300, icon: '📦' },
+            { id: 'regionHunter', title: 'Путешественник', desc: 'Разблокировать 5 регионов', reward: 500, icon: '🌍' },
+            { id: 'capitalist', title: 'Автобарыга', desc: 'Заработать всего 50 000 💰', reward: 1000, icon: '📈' },
+            { id: 'luckyStreak', title: 'Фартовый', desc: 'Сделать 5 редких/легендарных выпадений', reward: 700, icon: '🔥' },
+            { id: 'elite777', title: 'Спецномер', desc: 'Выбить номер с регионом 777 или 999', reward: 700, icon: '🚨' }
         ];
 
         window.onload = function() {
@@ -2533,7 +2868,7 @@
                 const c = localStorage.getItem('plateCoins_v3');
                 if (c !== null) coins = parseInt(c);
                 const l = localStorage.getItem('plateLuck_v3');
-                if (l !== null) luck = parseInt(l);
+                if (l !== null) { luck = parseFloat(l); if (!Number.isFinite(luck)) luck = 0; }
                 const reg = localStorage.getItem('plateActiveRegion_v3');
                 if (reg) activeRegion = reg;
                 const unl = localStorage.getItem('plateUnlockedRegions_v3');
@@ -2581,7 +2916,7 @@
             const bar = document.getElementById('luckBar');
             const txt = document.getElementById('luckPercent');
             if (bar) bar.style.width = `${luck}%`;
-            if (txt) txt.textContent = `${luck}%`;
+            if (txt) txt.textContent = `${Math.floor(luck)}%`;
         }
 
         function updateInvCounter() {
@@ -2827,7 +3162,7 @@
                         <div style="font-size:0.65rem; color:var(--muted);">~${item.val.realPriceRub.toLocaleString()} ₽</div>
                     </div>
                     <div class="inv-actions">
-                        <button onclick="sellFromInventory(${inventory.indexOf(item)})">Продать (+${item.val.sellCoins}💰)</button>${item.val.isRare && Feat.on() ? `<button class="inv-share" onclick="Feat.shareText('${item.fullText}')">📣</button>` : ''}
+                        <button onclick="sellFromInventory(${inventory.indexOf(item)})">Продать (+${item.val.sellCoins}💰)</button>${item.val.isRare && Feat.on() ? `<button class="inv-share" onclick="Feat.shareText('${item.fullText}')">📣</button><button class="inv-share" title="На рынок" onclick="closeModal('inventoryModal'); TabBar.go('market'); Market.sellPick('${item.fullText}')">🏷</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -2840,6 +3175,7 @@
             coins += item.val.sellCoins;
             profile.stats.totalEarned += item.val.sellCoins;
             inventory.splice(idx, 1);
+            if (item.val.isRare) { try { Feat.onGone(item.fullText); } catch (e) {} }
 
             updateCoinsDisplay();
             updateInvCounter();
@@ -3077,6 +3413,7 @@
 
             currentPlate.sold = true;
             coins += currentPlate.val.sellCoins;
+            if (currentPlate.val.isRare) { try { Feat.onGone(currentPlate.fullText); } catch (e) {} }
             profile.stats.totalEarned += currentPlate.val.sellCoins;
 
             AudioFX.playSell();
@@ -3149,7 +3486,7 @@
                     }
                     AudioFX.playWin(false);
                 } else {
-                    luck = Math.min(100, luck + 5);
+                    luck = Math.min(100, luck + 2.5);
                 }
                 updateLuckUI();
             }
@@ -3163,6 +3500,7 @@
                 if (shouldSell) {
                     currentPlate.sold = true;
                     coins += val.sellCoins;
+                    if (val.isRare) { try { Feat.onGone(currentPlate.fullText); } catch (e) {} }
                     profile.stats.totalEarned += val.sellCoins;
                     AudioFX.playSell();
                     showToast(`Авто-продажа: +${val.sellCoins} 💰`, '⚡');
