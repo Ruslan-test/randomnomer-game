@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta name="x-build" content="beta-2">
+    <meta name="x-build" content="beta-4">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -902,6 +902,46 @@
             font-size: 0.55rem; font-weight: 900; letter-spacing: 0.5px; padding: 1px 6px; border-radius: 6px;
             background: #f59e0b; color: #1c1305; opacity: 0.9;
         }
+    
+        .bonus-tile.daily { border-color: rgba(249, 115, 22, 0.6); background: rgba(249, 115, 22, 0.10); }
+        .bonus-tile.daily.done { opacity: 0.75; }
+        .bonus-tile.friends { border-color: rgba(59, 130, 246, 0.55); background: rgba(59, 130, 246, 0.09); }
+        .bonus-tile.top { border-color: rgba(234, 179, 8, 0.6); background: rgba(234, 179, 8, 0.09); }
+        .ad-btn.done { opacity: 0.6; }
+        .btn-share { width: 100%; margin-top: 8px; padding: 11px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.9rem; cursor: pointer;
+                     color: #fff; background: linear-gradient(90deg, #ec4899, #8b5cf6); }
+        .inv-actions .inv-share { background: linear-gradient(90deg, #ec4899, #8b5cf6); color: #fff; margin-left: 4px; }
+        .feat-modal { text-align: center; }
+        .feat-ic { font-size: 2.4rem; margin-bottom: 4px; }
+        .feat-p { font-size: 0.82rem; color: var(--muted); margin: 8px 0; line-height: 1.35; }
+        .feat-p.ok { color: #10b981; }
+        .feat-p.small { font-size: 0.72rem; }
+        .feat-btn { width: 100%; margin-top: 10px; padding: 12px; border: none; border-radius: 12px; font-weight: bold; font-size: 0.95rem; cursor: pointer;
+                    background: var(--accent); color: #fff; }
+        .feat-btn.alt { background: var(--card-inner, rgba(255,255,255,0.08)); color: inherit; border: 1px solid var(--border, rgba(255,255,255,0.15)); }
+        .feat-btn:disabled { opacity: 0.55; cursor: default; }
+        .feat-link { background: none; border: none; color: #f97316; font-size: 0.8rem; font-weight: bold; cursor: pointer; margin: 4px 0; }
+        .daily-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+        .daily-grid .dd { border: 1px solid var(--border, rgba(255,255,255,0.15)); border-radius: 10px; padding: 6px 2px; background: var(--card-inner, rgba(255,255,255,0.05)); }
+        .daily-grid .dd small { display: block; font-size: 0.6rem; color: var(--muted); }
+        .daily-grid .dd b { font-size: 0.8rem; color: var(--coin, #fbbf24); }
+        .daily-grid .dd.got { opacity: 0.6; }
+        .daily-grid .dd.now { border-color: #f97316; box-shadow: 0 0 0 2px rgba(249,115,22,0.35); }
+        .daily-grid .dd:last-child { grid-column: span 2; }
+        .tm-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .tech-img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 14px; background: rgba(255,255,255,0.05); }
+        .tech-title { font-size: 1.05rem; margin: 10px 0 2px; }
+        .tech-price { font-size: 1.3rem; font-weight: 900; color: #f97316; }
+        .ref-link { font-family: monospace; font-size: 0.75rem; word-break: break-all; padding: 8px; border-radius: 10px;
+                    background: var(--card-inner, rgba(255,255,255,0.06)); border: 1px dashed var(--border, rgba(255,255,255,0.2)); user-select: all; }
+        .top-list { text-align: left; margin: 8px 0; }
+        .top-row { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; font-size: 0.85rem; }
+        .top-row:nth-child(odd) { background: rgba(255,255,255,0.04); }
+        .top-row.me { background: rgba(249,115,22,0.15); font-weight: bold; }
+        .top-row .tr-n { width: 28px; text-align: center; }
+        .top-row .tr-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .top-row .tr-pts { color: var(--coin, #fbbf24); font-weight: bold; }
+        .share-img { width: 100%; border-radius: 14px; margin: 6px 0; }
     </style>
 </head>
 <body>
@@ -913,7 +953,7 @@
         <div class="top-bar">
             <div class="top-bar-left">
                 <div class="coins-display" id="coinsDisplay" onclick="openDonate()" title="Магазин монет">💰 500</div>
-                <button class="ad-btn" onclick="startAdModal()">📺 +250 💰</button>
+                <button class="ad-btn" id="adTopBtn" onclick="Feat.openTechno()">🛍 +250 💰</button>
                 <div class="inv-counter" id="invCounter">📦 0/120</div>
             </div>
             <div class="icons-right">
@@ -978,6 +1018,7 @@
                 <button class="btn btn-sell" id="sellBtn" onclick="sellCurrent()">💰 Продать</button>
                 <button class="btn btn-inv" id="invBtn" onclick="saveToInventory()">📦 В инвентарь</button>
             </div>
+            <button class="btn-share" id="shareBtn" style="display:none" onclick="Feat.share(currentPlate)">📣 Похвастаться</button>
         </div>
         </section>
 
@@ -1025,9 +1066,12 @@
 
         <section class="tab-panel" id="tab-bonus" data-tab="bonus" role="tabpanel">
             <h2 class="tab-title">🎁 Бонусы</h2>
+            <button class="bonus-tile daily" id="dailyTileBtn" onclick="Feat.openDaily()"><span class="bt-ic">📅</span><span class="bt-tx"><b id="dailyTileT">📅 Ежедневная награда</b><small id="dailyTileS">Заходи каждый день — до +1 000 💰</small></span><span class="bt-go">›</span></button>
             <button class="bonus-tile promo" id="promoOpenBtn" onclick="PromoUI.open()"><span class="bt-ic">🎟</span><span class="bt-tx"><b>🎟 Промокод</b><small>Введи код — получи монеты</small></span><span class="bt-go">›</span></button>
             <button class="bonus-tile tm" id="tmMainBtn" onclick="technoShowInShop()"><span class="bt-ic">📣</span><span class="bt-tx"><b>🎁 +1 000 💰 за подписку на Техноманию</b><small>Подпишись на канал магазина и забери монеты</small></span><span class="bt-go">›</span></button>
-            <button class="bonus-tile ad" id="adTileBtn" onclick="startAdModal()"><span class="bt-ic">📺</span><span class="bt-tx"><b>Реклама: +250 💰</b><small>Посмотри рекламную паузу 30 сек</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile ad" id="adTileBtn" onclick="Feat.openTechno()"><span class="bt-ic">🛍</span><span class="bt-tx"><b>🛍 Товар дня: +250 💰</b><small id="adTileS">Глянь товар «Техномании» в канале</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile friends" id="inviteTileBtn" onclick="Feat.openInvite()"><span class="bt-ic">👥</span><span class="bt-tx"><b>👥 Позови друга: +500 💰 обоим</b><small id="inviteTileS">За подписку друга на Техноманию — ещё +1 000 💰</small></span><span class="bt-go">›</span></button>
+            <button class="bonus-tile top" id="topTileBtn" onclick="Feat.openTop()"><span class="bt-ic">🏆</span><span class="bt-tx"><b>🏆 Топ недели</b><small id="topTileS">Лучшие подписчики Техномании могут получить приз от Техномании</small></span><span class="bt-go">›</span></button>
             <button class="bonus-tile ch" id="channelBtn" onclick="PromoUI.openChannel()"><span class="bt-ic">📢</span><span class="bt-tx"><b>📢 Канал игры</b><small>Новости и свежие промокоды</small></span><span class="bt-go">›</span></button>
             <button class="bonus-tile stars" id="donateOpenBtn" onclick="openDonate()"><span class="bt-ic">⭐</span><span class="bt-tx"><b>🛒 Монеты за ⭐ · бонус до +40%</b><small>Магазин монет за звёзды Telegram</small></span><span class="bt-go">›</span></button>
             <button class="bonus-tile" id="achTileBtn" onclick="openAchievements()"><span class="bt-ic">🏆</span><span class="bt-tx"><b>Достижения</b><small>Награды монетами за прогресс</small></span><span class="bt-go">›</span></button>
@@ -1073,28 +1117,12 @@
             <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
-            <span class="beta-tag" id="betaTag">ТЕСТ · b2</span>
+            <span class="beta-tag" id="betaTag">ТЕСТ · b4</span>
         </div>
     </nav>
 
     <!-- Modals -->
     <!-- Ad Banner Modal -->
-    <div class="modal-overlay" id="adModal" style="backdrop-filter: blur(12px);">
-        <div class="modal" style="text-align:center; max-width:380px; padding:30px 20px;">
-            <button class="modal-close" id="adCloseBtn" style="display:none;" onclick="closeAdModal()">✕</button>
-            <div style="font-size:3rem; margin-bottom:10px;">📺</div>
-            <h2 style="font-size:1.3rem; margin-bottom:6px;">Рекламная пауза</h2>
-            <p style="font-size:0.85rem; color:var(--muted); margin-bottom:18px;">Посмотрите рекламу, чтобы получить <b style="color:var(--coin);">+250 💰</b>!</p>
-            
-            <div style="background:var(--card-inner); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:18px;">
-                <div style="font-size:0.8rem; color:var(--muted); margin-bottom:10px;">Симуляция автосалона премиум авто</div>
-                <div style="font-weight:bold; color:var(--accent); font-size:1.1rem; margin-bottom:8px;">🚗 Покупайте и продавайте номера со скидкой!</div>
-                <div id="adTimerText" style="font-size:1.5rem; font-weight:900; color:var(--coin);">Осталось: 30 сек</div>
-            </div>
-
-            <button id="adClaimBtn" class="btn" style="width:100%; display:none;" onclick="claimAdReward()">🎁 Получить 250 💰</button>
-        </div>
-    </div>
 
     <!-- Region Shop Modal -->
     <div class="modal-overlay" id="regionModal">
@@ -1438,7 +1466,7 @@
             function go(name) {
                 if (name === 'shop') return openDonate();
                 if (name === 'profile') return openProfile();
-                if (name === 'bonus') { try { renderTechno(); PromoUI.render(); } catch (e) {} }
+                if (name === 'bonus') { try { renderTechno(); PromoUI.render(); Feat.render(); } catch (e) {} }
                 show(name);
             }
             function badge(name, on) {
@@ -1592,7 +1620,7 @@
             if (b) b.classList.toggle('claimed', done);
             const m = document.getElementById('tmMainBtn');
             if (m) m.style.display = done ? 'none' : '';
-            if (typeof TabBar !== 'undefined') TabBar.badge('bonus', !done);
+            if (typeof TabBar !== 'undefined') TabBar.badge('bonus', !done || (typeof Feat !== 'undefined' && Feat.hasNew()));
         }
 
         /* ===== Промокоды на монеты + ссылка на канал игры =====
@@ -1668,11 +1696,327 @@
             return { open, submit, validate, normalize, link, onRedeemed, openChannel, render };
         })();
 
+        /* ===== Фичи с сервером бота: ежедневка, товар дня Техномании, друзья, топ недели, «похвастаться» =====
+           API бота (HTTPS) принимает только подписанный Telegram initData. Монеты сервер выдаёт подписанными
+           токенами (как подарки из бота) — их зачисляет GrantRedeemer. Без Telegram/сервера всё тихо выключено. */
+        const Feat = (() => {
+            const API = 'https://157-228-161-34.sslip.io';
+            const POSTS = [{"id": 771, "url": "https://t.me/tehnomania1/771", "title": "Морозильный ларь Kraft BD(W)-102BL", "price": 13000, "img": "771.jpg", "sub": "105 л, до −24 °C, держит холод 17 ч без света"}, {"id": 769, "url": "https://t.me/tehnomania1/769", "title": "Встраиваемая техника Hiberg в чёрном стекле", "price": 26000, "img": "769.jpg", "sub": "Газовая варочная + духовой шкаф, WOK-конфорка"}, {"id": 767, "url": "https://t.me/tehnomania1/767", "title": "Стирка и сушка Midea", "price": 44000, "img": "767.jpg", "sub": "Стиралка + сушилка с тепловым насосом, 9 кг, Wi-Fi"}, {"id": 765, "url": "https://t.me/tehnomania1/765", "title": "Стиральная машина Beko RSPE78612W", "price": 24500, "img": "765.jpg", "sub": "7 кг, пар SteamCure, инверторный мотор"}, {"id": 762, "url": "https://t.me/tehnomania1/762", "title": "Комплект встраиваемой техники Gorenje", "price": 24000, "img": "762.jpg", "sub": "Варочная, духовка и микроволновка в комплекте"}, {"id": 760, "url": "https://t.me/tehnomania1/760", "title": "Комплект Hiberg в ретро-стиле", "price": 27000, "img": "760.jpg", "sub": "Бежевая варочная и духовка — винтажный вайб"}];            // запасная витрина, если сервер недоступен
+            const DAILY = [100, 150, 200, 300, 400, 600, 1000];
+            let S = null;                               // состояние из /api/hello
+            let rolls = 0, rare = [], flushT = null, timerT = null, claiming = false;
+
+            const WA = () => window.Telegram && window.Telegram.WebApp;
+            function initData() { try { return (WA() && WA().initData) || ''; } catch (e) { return ''; } }
+            function on() { return !!API && /(^|&)hash=/.test(initData()); }
+            const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            const fmt = n => Number(n || 0).toLocaleString('ru-RU');
+            const $ = id => document.getElementById(id);
+
+            async function api(path, body) {
+                if (!on()) return null;
+                let ctl = null, t = null;
+                try {
+                    ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                    t = setTimeout(() => { try { ctl && ctl.abort(); } catch (e) {} }, 9000);
+                    const r = await fetch(API + '/api/' + path, {
+                        method: 'POST', mode: 'cors', keepalive: path === 'progress',
+                        headers: { 'Authorization': 'tma ' + initData(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body || {}), signal: ctl ? ctl.signal : undefined,
+                    });
+                    let j = null;
+                    try { j = await r.json(); } catch (e) {}
+                    if (!r.ok) return Object.assign({ ok: false, error: r.status === 429 ? 'rate' : 'http' }, j || {}, { ok: false });
+                    return j;
+                } catch (e) { return null; } finally { if (t) clearTimeout(t); }
+            }
+            const offline = () => showToast('Сервер игры не отвечает — попробуй чуть позже', '📡');
+
+            async function take(token) {
+                try { return await GrantRedeemer.redeem(token, { quiet: true }); } catch (e) { return null; }
+            }
+            function openLink(url) { try { technoOpen(url); } catch (e) {} }
+
+            function modal(id, html) {
+                let ov = $(id);
+                if (!ov) { ov = document.createElement('div'); ov.className = 'modal-overlay'; ov.id = id; document.body.appendChild(ov); }
+                ov.innerHTML = `<div class="modal feat-modal"><button class="modal-close" onclick="closeModal('${id}')">✕</button>${html}</div>`;
+                return ov;
+            }
+            const isOpen = id => { const m = $(id); return !!(m && m.classList.contains('open')); };
+
+            /* ---------- плитки на вкладке «Бонусы» ---------- */
+            function hasNew() {
+                if (!S) return false;
+                return (S.daily && !S.daily.claimed) || (S.techno && S.techno.left > 0);
+            }
+            function render() {
+                const d = S && S.daily, t = S && S.techno, r = S && S.ref, tp = S && S.top;
+                const set = (id, txt) => { const e = $(id); if (e) e.textContent = txt; };
+                if (d) {
+                    set('dailyTileT', d.claimed ? '📅 Награда за сегодня забрана' : `📅 Забери +${fmt(d.reward)} 💰`);
+                    set('dailyTileS', d.claimed ? `Серия ${d.streak} дн. 🔥 Завтра +${fmt(d.tomorrow)} 💰` : `День ${d.day} из 7 · не пропускай, а то серия сгорит`);
+                }
+                if (t) set('adTileS', t.left > 0 ? `Глянь товар «Техномании» · осталось ${t.left} из ${t.max} сегодня` : 'На сегодня всё — завтра новые товары 🔥');
+                if (r) set('inviteTileS', r.count ? `Друзей по твоей ссылке: ${r.count} · за подписку друга ещё +${fmt(r.sub_bonus)}` : `За подписку друга на Техноманию — ещё +${fmt(r.sub_bonus)} 💰`);
+                if (tp && tp.me && tp.me.rank) set('topTileS', `Ты на ${tp.me.rank} месте · ${fmt(tp.me.pts)} очк.`);
+                const dt = $('dailyTileBtn'); if (dt) dt.classList.toggle('done', !!(d && d.claimed));
+                const ab = $('adTopBtn'); if (ab) ab.classList.toggle('done', !!(t && t.left <= 0));
+                try { if (typeof TabBar !== 'undefined') TabBar.badge('bonus', !technoClaimed() || hasNew()); } catch (e) {}
+                try { renderPlate(typeof currentPlate !== 'undefined' ? currentPlate : null); } catch (e) {}
+                try { if (isOpen('techModal')) drawTechno(); } catch (e) {}
+            }
+
+            async function init() {
+                render();
+                if (!on()) return;
+                const h = await api('hello');
+                if (!h || !h.ok) return;
+                S = h;
+                render();
+                for (const x of (h.tokens || [])) await take(x.token);    // монеты, которые не успели зачислиться
+                document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+                try { WA().onEvent('deactivated', flush); } catch (e) {}
+            }
+
+            /* ---------- 📅 ежедневная награда ---------- */
+            function openDaily() {
+                TGApp.haptic('light');
+                const d = S && S.daily;
+                if (!d) {
+                    modal('dailyModal', `<div class="feat-ic">📅</div><h2>Ежедневная награда</h2>
+                        <p class="feat-p">Заходи каждый день и забирай монеты: ${DAILY.map(fmt).join(' → ')} 💰. Пропустишь день — серия начнётся заново.</p>
+                        <p class="feat-p">${on() ? 'Сервер игры не отвечает — загляни чуть позже.' : 'Открой игру через бота @randomnomerrf_bot в Telegram, чтобы забирать награды.'}</p>`);
+                    openModal('dailyModal'); return;
+                }
+                const k = d.claimed ? d.day : d.day - 1;     // сколько дней недели серии уже забрано
+                const mult = d.boost ? 1 + d.boost_pct / 100 : 1;
+                const cells = d.rewards.map((v, i) => `<div class="dd ${i < k ? 'got' : ''} ${i === d.day - 1 && !d.claimed ? 'now' : ''}">
+                    <small>День ${i + 1}</small><b>${i < k ? '✅' : '+' + fmt(Math.floor(v * mult))}</b></div>`).join('');
+                modal('dailyModal', `<div class="feat-ic">📅</div><h2>Ежедневная награда</h2>
+                    <p class="feat-p">Серия: <b>${d.streak} дн.</b> 🔥 Пропустишь день — серия сгорит.</p>
+                    <div class="daily-grid">${cells}</div>
+                    ${d.boost ? `<p class="feat-p ok">📣 Ты подписан на Техноманию — награда +${d.boost_pct}%</p>`
+                              : `<button class="feat-link" onclick="closeModal('dailyModal'); technoShowInShop()">📣 Подпишись на Техноманию — награда +${d.boost_pct}%</button>`}
+                    <button class="feat-btn" id="dailyClaimBtn" ${d.claimed ? 'disabled' : ''} onclick="Feat.claimDaily()">
+                        ${d.claimed ? `✅ Забрано · завтра +${fmt(d.tomorrow)} 💰` : `🎁 Забрать +${fmt(d.reward)} 💰`}</button>`);
+                openModal('dailyModal');
+            }
+            async function claimDaily() {
+                if (claiming) return; claiming = true;
+                const b = $('dailyClaimBtn'); if (b) b.disabled = true;
+                try {
+                    const r = await api('daily/claim');
+                    if (!r || !r.ok) { offline(); if (b) b.disabled = false; return; }
+                    if (r.daily) S.daily = r.daily;
+                    if (r.token) await take(r.token);
+                    else if (r.already) showToast('Сегодня уже забрано — приходи завтра', '📅');
+                    render();
+                    if (isOpen('dailyModal')) openDaily();
+                } finally { claiming = false; }
+            }
+
+            /* ---------- 🛍 товар дня Техномании (вместо фейковой рекламы) ---------- */
+            function fallbackPost() {
+                if (!POSTS.length) return null;
+                const day = Math.floor((Date.now() + 3 * 3600e3) / 86400e3);
+                const p = POSTS[day % POSTS.length];
+                return Object.assign({}, p, { img: API + '/static/techno/' + p.img });
+            }
+            function drawTechno() {
+                const t = S && S.techno;
+                const p = (t && t.post) || fallbackPost();
+                if (!p) return;
+                const left = t ? t.left : 0;
+                let action;
+                if (!t) action = `<p class="feat-p">${on() ? 'Сервер игры не отвечает — монеты за просмотр позже.' : 'Монеты за просмотр — в игре из Telegram (@randomnomerrf_bot).'}</p>`;
+                else if (left <= 0) action = `<p class="feat-p ok">На сегодня всё: ${t.max} из ${t.max} 🔥 Завтра новые товары</p>`;
+                else if (!t.opened) action = `<p class="feat-p">Открой пост в канале и вернись — получишь <b>+${fmt(t.reward)} 💰</b> (${t.claims} из ${t.max} сегодня)</p>`;
+                else if (t.wait > 0) action = `<button class="feat-btn" disabled id="techClaimBtn">⏳ Награда через ${t.wait} сек…</button>`;
+                else action = `<button class="feat-btn" id="techClaimBtn" onclick="Feat.claimTechno()">🎁 Забрать +${fmt(t.reward)} 💰</button>`;
+                modal('techModal', `<div class="tm-label">Реклама · товар дня от «Техномании»</div>
+                    <img class="tech-img" src="${esc(p.img)}" alt="" onerror="this.style.display='none'">
+                    <h2 class="tech-title">${esc(p.title)}</h2>
+                    <div class="tech-price">${fmt(p.price)} ₽</div>
+                    <p class="feat-p">${esc(p.sub || '')}</p>
+                    ${t && t.address ? `<p class="feat-p">📍 Магазин «Техномания», ${esc(t.address)}</p>` : ''}
+                    <button class="feat-btn alt" id="techOpenBtn" onclick="Feat.openPost()">👀 Смотреть в канале</button>
+                    ${action}`);
+            }
+            function tick() {
+                if (timerT) clearInterval(timerT);
+                timerT = setInterval(() => {
+                    const t = S && S.techno;
+                    if (!t || !t.opened || t.wait <= 0 || !isOpen('techModal')) { clearInterval(timerT); timerT = null; if (t && isOpen('techModal')) drawTechno(); return; }
+                    t.wait = Math.max(0, t.wait - 1);
+                    const b = $('techClaimBtn');
+                    if (t.wait > 0 && b) b.textContent = `⏳ Награда через ${t.wait} сек…`;
+                    else drawTechno();
+                }, 1000);
+            }
+            function openTechno() {
+                TGApp.haptic('light');
+                drawTechno();
+                openModal('techModal');
+                if (S && S.techno && S.techno.opened) tick();
+            }
+            async function openPost() {
+                const t = S && S.techno;
+                const p = (t && t.post) || fallbackPost();
+                if (!p) return;
+                if (t && t.left > 0) {
+                    const r = await api('techno/open');
+                    if (r && r.techno) { S.techno = r.techno; drawTechno(); tick(); }
+                }
+                openLink(p.url);
+            }
+            async function claimTechno() {
+                if (claiming) return; claiming = true;
+                const b = $('techClaimBtn'); if (b) b.disabled = true;
+                try {
+                    const t = S && S.techno;
+                    const r = await api('techno/claim', { post: t && t.post ? t.post.id : null });
+                    if (!r) { offline(); if (b) b.disabled = false; return; }
+                    if (r.techno) S.techno = r.techno;
+                    if (r.ok && r.token) { await take(r.token); }
+                    else if (r.error === 'wait') { showToast('Сначала глянь пост в канале 😉', '👀'); tick(); }
+                    else if (r.error === 'not_opened') showToast('Открой пост в канале — и монеты твои', '👀');
+                    else if (r.error === 'limit') showToast('На сегодня всё — завтра новые товары', '🔥');
+                    render(); drawTechno();
+                } finally { claiming = false; }
+            }
+
+            /* ---------- 👥 позвать друга ---------- */
+            function openInvite() {
+                TGApp.haptic('light');
+                const r = S && S.ref;
+                if (!r) {
+                    modal('inviteModal', `<div class="feat-ic">👥</div><h2>Позови друга</h2>
+                        <p class="feat-p">Друг заходит по твоей ссылке — вам обоим <b>+500 💰</b>. Подпишется на Техноманию — тебе ещё <b>+1 000 💰</b>.</p>
+                        <p class="feat-p">${on() ? 'Сервер игры не отвечает — ссылку пришлёт бот по команде /invite.' : 'Твою ссылку пришлёт бот @randomnomerrf_bot в Telegram по команде /invite.'}</p>`);
+                    openModal('inviteModal'); return;
+                }
+                modal('inviteModal', `<div class="feat-ic">👥</div><h2>Позови друга</h2>
+                    <p class="feat-p">Друг заходит по твоей ссылке — вам обоим <b>+${fmt(r.bonus)} 💰</b>.<br>Подпишется на Техноманию — тебе ещё <b>+${fmt(r.sub_bonus)} 💰</b>.</p>
+                    <div class="ref-link" id="refLinkBox">${esc(r.link)}</div>
+                    <p class="feat-p">Пришло друзей: <b>${r.count}</b> · подписались: <b>${r.subs}</b></p>
+                    <button class="feat-btn" id="inviteSendBtn" onclick="Feat.sendInvite()">📤 Отправить другу</button>
+                    <button class="feat-btn alt" onclick="Feat.copyInvite()">📋 Скопировать ссылку</button>
+                    <p class="feat-p small">Бонус только за новых игроков. Себя пригласить не выйдет 😉</p>`);
+                openModal('inviteModal');
+            }
+            function sendInvite() { const r = S && S.ref; if (r) { TGApp.haptic('select'); openLink(r.share); } }
+            async function copyInvite() {
+                const r = S && S.ref; if (!r) return;
+                try { await navigator.clipboard.writeText(r.link); showToast('Ссылка скопирована', '📋'); }
+                catch (e) { showToast('Не вышло скопировать — зажми ссылку и скопируй', '📋'); }
+            }
+
+            /* ---------- 🏆 топ недели ---------- */
+            function drawTop(tp) {
+                const medal = i => ['🥇', '🥈', '🥉'][i - 1] || i + '.';
+                const rows = (tp.list || []).map(x => `<div class="top-row ${x.me ? 'me' : ''}"><span class="tr-n">${medal(x.rank)}</span>
+                    <span class="tr-name">${esc(x.name)}${x.me ? ' (ты)' : ''}</span><span class="tr-pts">${fmt(x.pts)}</span></div>`).join('')
+                    || '<p class="feat-p">Пока пусто — крути номера и забирай первое место!</p>';
+                const left = Math.max(0, tp.ends_ts * 1000 - Date.now());
+                const dd = Math.floor(left / 86400e3), hh = Math.floor(left % 86400e3 / 3600e3);
+                const me = tp.me && tp.me.rank ? `Ты на <b>${tp.me.rank}</b> месте · ${fmt(tp.me.pts)} очк.` : 'Ты ещё не в топе — крути номера!';
+                const sub = S && S.sub;
+                const subOk = sub && sub.claimed && !sub.paused;
+                const pts = tp.pts || {};
+                modal('topModal', `<div class="feat-ic">🏆</div><h2>Топ недели</h2>
+                    <p class="feat-p small">${esc(tp.title || '')} · до конца ${dd} д ${hh} ч</p>
+                    <div class="top-list">${rows}</div>
+                    <p class="feat-p">${me}</p>
+                    <p class="feat-p small">Очки: прокрут +${pts.roll || 1}, редкий +${pts.rare || 0}, эпический +${pts.epic || 0}, легендарный +${fmt(pts.legend || 0)}</p>
+                    <p class="feat-p">🎁 ${esc(tp.contest || '')}</p>
+                    ${subOk ? '<p class="feat-p ok">📣 Ты подписан на Техноманию — участвуешь в конкурсе</p>'
+                            : `<button class="feat-btn alt" onclick="closeModal('topModal'); technoShowInShop()">📣 Подписаться на Техноманию и участвовать</button>`}`);
+            }
+            async function openTop() {
+                TGApp.haptic('light');
+                if (!on()) {
+                    modal('topModal', `<div class="feat-ic">🏆</div><h2>Топ недели</h2><p class="feat-p">Топ игроков — в игре из Telegram (@randomnomerrf_bot).</p>`);
+                    openModal('topModal'); return;
+                }
+                await flush();
+                if (S && S.top) { drawTop(S.top); openModal('topModal'); }
+                const r = await api('top');
+                if (r && r.ok) { S = S || {}; S.top = r; drawTop(r); openModal('topModal'); render(); }
+                else if (!(S && S.top)) offline();
+            }
+
+            /* ---------- очки за прокруты (пачкой раз в ~20 сек) ---------- */
+            function onRoll(plate) {
+                if (!on() || !plate) return;
+                rolls++;
+                if (plate.val && plate.val.isRare && rare.length < 50) rare.push(plate.fullText);
+                if (!flushT) flushT = setTimeout(flush, 20000);
+            }
+            async function flush() {
+                if (flushT) { clearTimeout(flushT); flushT = null; }
+                if (!rolls || !on()) return;
+                const body = { rolls, plates: rare };
+                rolls = 0; rare = [];
+                const r = await api('progress', body);
+                if (r && r.ok && S && S.top) { S.top.me = r.me; render(); }
+            }
+
+            /* ---------- 📣 похвастаться редким номером ---------- */
+            function renderPlate(plate) {
+                const b = $('shareBtn');
+                if (b) b.style.display = on() && plate && plate.val && plate.val.isRare ? '' : 'none';
+            }
+            async function share(plate) {
+                if (!plate) return;
+                return shareText(plate.fullText);
+            }
+            async function shareText(text) {
+                if (!on()) { showToast('Похвастаться можно в игре из Telegram', '📣'); return; }
+                TGApp.haptic('light');
+                showToast('Готовлю картинку…', '🎨');
+                const r = await api('share', { plate: text });
+                if (!r) return offline();
+                if (!r.ok) {
+                    showToast(r.error === 'limit' ? 'На сегодня хватит хвастаться 😅 Завтра ещё' : r.error === 'not_rare' ? 'Хвастаться можно редкими номерами и круче' : 'Не получилось — попробуй ещё раз', '📣');
+                    return;
+                }
+                const w = WA();
+                const canMsg = !!(r.msg_id && w && typeof w.shareMessage === 'function');
+                const canStory = !!(w && typeof w.shareToStory === 'function');
+                modal('shareModal', `<div class="feat-ic">📣</div><h2>Похвастаться</h2>
+                    <img class="share-img" src="${esc(r.image)}" alt="">
+                    <button class="feat-btn" onclick="Feat.shareChat()">💬 Отправить в чат</button>
+                    ${canStory ? '<button class="feat-btn alt" onclick="Feat.shareStory()">📸 Выложить в историю</button>' : ''}`);
+                Feat._last = Object.assign(r, { canMsg });
+                openModal('shareModal');
+            }
+            function shareChat() {
+                const r = Feat._last, w = WA(); if (!r) return;
+                if (r.canMsg) { try { w.shareMessage(r.msg_id, ok => { if (ok) showToast('Отправлено! 🔥', '📣'); }); return; } catch (e) {} }
+                openLink(r.share_url);
+            }
+            function shareStory() {
+                const r = Feat._last, w = WA(); if (!r) return;
+                const premium = !!(w.initDataUnsafe && w.initDataUnsafe.user && w.initDataUnsafe.user.is_premium);
+                const p = { text: r.text.slice(0, premium ? 2048 : 200) };
+                if (premium) p.widget_link = { url: r.link, name: 'Играть' };
+                try { w.shareToStory(r.story, p); } catch (e) { showToast('Истории недоступны в этой версии Telegram', '📸'); }
+            }
+
+            return { init, render, hasNew, on, openDaily, claimDaily, openTechno, openPost, claimTechno, openInvite, sendInvite,
+                     copyInvite, openTop, onRoll, flush, renderPlate, share, shareText, shareChat, shareStory, _last: null,
+                     _state: () => S };
+        })();
+
         const GrantRedeemer = (() => {
             const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
             const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
             const MAX_NUMBERS = 20, MAX_REDEEMED = 500, MAX_COINS = 10000000, MAX_PROMO = 200;
             const PROMO_CODE_RE = /^[A-Z0-9_-]{3,32}$/;
+            // src — за что монеты (ежедневка, товар дня, друг…). Старые сборки поле игнорируют.
+            const SRC_TEXT = { daily: 'ежедневная награда', techno: 'товар дня от Техномании', ref: 'бонус за приглашение друга',
+                               refsub: 'друг подписался на Техноманию', contest: 'конкурс недели' };
 
             function b64ToBytes(s) {
                 s = String(s).replace(/-/g, '+').replace(/_/g, '/');
@@ -1687,7 +2031,7 @@
                     return new URLSearchParams((location.hash || '').slice(1)).get('g');
                 } catch (e) { return null; }
             }
-            function clearToken() {
+            function clearUrlToken() {
                 try {
                     const u = new URL(location.href);
                     u.searchParams.delete('g');
@@ -1722,6 +2066,7 @@
                         if (!Number.isSafeInteger(p.coins) || p.coins <= 0 || p.coins > MAX_COINS || 'numbers' in p) return { ok: false, reason: 'bad' };
                         if ('kind' in p && p.kind !== 'sub') return { ok: false, reason: 'bad' };    // kind:'sub' — бонус за подписку на Техноманию
                         if ('code' in p && ('kind' in p || typeof p.code !== 'string' || !PROMO_CODE_RE.test(p.code))) return { ok: false, reason: 'bad' };   // code — активированный промокод
+                        if ('src' in p && ('kind' in p || 'code' in p || !Object.prototype.hasOwnProperty.call(SRC_TEXT, p.src))) return { ok: false, reason: 'bad' };
                     } else if ('code' in p) {
                         return { ok: false, reason: 'bad' };
                     } else if (p.type !== undefined || !Array.isArray(p.numbers) || !p.numbers.length || p.numbers.length > MAX_NUMBERS || !p.numbers.every(plateOK)) {
@@ -1773,9 +2118,10 @@
                 openModal('grantModal');
             }
 
-            function showCoinsModal(amount, kind, code) {
+            function showCoinsModal(amount, kind, code, src) {
                 const sub = kind === 'sub';
                 const promo = !sub && !!code;
+                const srcText = !sub && !promo && src && SRC_TEXT[src];
                 let ov = document.getElementById('grantModal');
                 if (!ov) {
                     ov = document.createElement('div');
@@ -1787,9 +2133,9 @@
                     <div class="modal" style="text-align:center;">
                         <button class="modal-close" onclick="closeModal('grantModal')">✕</button>
                         <div style="font-size:2.6rem; margin-bottom:6px;">🎁</div>
-                        <h2>${sub ? 'Спасибо за подписку!' : promo ? 'Промокод активирован!' : 'Вам выданы монеты!'}</h2>
+                        <h2>${sub ? 'Спасибо за подписку!' : promo ? 'Промокод активирован!' : srcText ? 'Монеты твои!' : 'Вам выданы монеты!'}</h2>
                         <div style="font-size:1.6rem; font-weight:bold; color:var(--coin, #fbbf24); margin:10px 0;">+${Number(amount).toLocaleString('ru-RU')} 💰</div>
-                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : promo ? `Промокод <b>${escapeHtml(code)}</b>.` : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
+                        <p style="font-size:0.8rem; color:var(--muted); margin:6px 0 12px;">${sub ? 'Бонус за подписку на канал «Техномания».' : promo ? `Промокод <b>${escapeHtml(code)}</b>.` : srcText ? escapeHtml(srcText[0].toUpperCase() + srcText.slice(1)) + '.' : 'Подарок от администрации «Номерного Рандомайзера».'} Монеты уже на вашем балансе.</p>
                         <button onclick="closeModal('grantModal'); TabBar.show('game');" style="margin-top:4px; width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; font-size:0.95rem; cursor:pointer;">🎲 Играть</button>
                     </div>`;
                 openModal('grantModal');
@@ -1821,11 +2167,21 @@
             async function run() {
                 const token = readToken();
                 if (!token) return null;
-                const done = (status, extra) => { window.__grantResult = Object.assign({ status }, extra || {}); return window.__grantResult; };
-                try { TabBar.show('game'); } catch (e) {}
+                return redeem(token, { fromUrl: true });
+            }
+
+            /* Зачисление по токену. fromUrl — ссылка из бота (модалка, результат в __grantResult);
+               quiet — монеты, полученные прямо в игре (ежедневка, товар дня): только тост. */
+            async function redeem(token, opts) {
+                opts = opts || {};
+                const quiet = !!opts.quiet;
+                const clearToken = opts.fromUrl ? clearUrlToken : () => {};
+                const done = (status, extra) => { const r = Object.assign({ status }, extra || {}); if (opts.fromUrl) window.__grantResult = r; return r; };
+                if (opts.fromUrl) { try { TabBar.show('game'); } catch (e) {} }
                 const v = await verify(token);
                 if (!v.ok) {
                     clearToken();
+                    if (quiet) return done(v.reason === 'nocrypto' ? 'nocrypto' : 'invalid');
                     if (v.reason === 'nocrypto') { showToast('Не удалось проверить подарок на этом устройстве. Обнови Telegram и открой ссылку ещё раз', '⚠️'); return done('nocrypto'); }
                     TGApp.haptic('error');
                     showToast('Ссылка на подарок недействительна', '⛔');
@@ -1833,14 +2189,16 @@
                 }
                 const p = v.payload;
                 const me = TGApp.userId();
-                if (!me) { showToast('Открой подарок из сообщения бота @randomnomerrf_bot в Telegram', '🎁'); return done('not_in_tg'); }
+                if (!me) { if (quiet) return done('not_in_tg'); showToast('Открой подарок из сообщения бота @randomnomerrf_bot в Telegram', '🎁'); return done('not_in_tg'); }
                 if (String(p.uid) !== me) {
                     clearToken();
+                    if (quiet) return done('wrong_user');
                     TGApp.haptic('error');
                     showToast('Этот подарок выдан другому игроку', '⛔');
                     return done('wrong_user');
                 }
                 if (!TGApp.cloudReady()) {
+                    if (quiet) return done('cloud_not_ready');
                     showToast('Не удалось загрузить сохранение. Открой подарок ещё раз чуть позже', '⚠️');
                     return done('cloud_not_ready');
                 }
@@ -1848,6 +2206,7 @@
                 if (list.includes(p.nonce)) {
                     clearToken();
                     if (markSub(p) | markPromo(p)) { saveData(); TGApp.saveNow(); }
+                    if (quiet) return done('already');
                     if (p.code) { showToast('Этот промокод уже активирован — монеты на балансе', '🎟'); return done('already', { code: p.code }); }
                     showToast(p.type === 'coins' ? 'Этот подарок уже получен — монеты на балансе' : 'Этот подарок уже получен — номера в инвентаре', p.type === 'coins' ? '💰' : '📦');
                     return done('already');
@@ -1866,11 +2225,11 @@
                     try { checkAchievements(); } catch (e) {}
                     TGApp.haptic('success');
                     try { AudioFX.playWin(false); } catch (e) {}
-                    showCoinsModal(p.coins, p.kind, p.code);
+                    if (!quiet) showCoinsModal(p.coins, p.kind, p.code, p.src);
                     if (p.code) showToast(`Промокод активирован: +${p.coins.toLocaleString('ru-RU')} монет`, '🎟');
-                    else showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — ${p.kind === 'sub' ? 'бонус за подписку на Техноманию!' : 'подарок от администрации!'}`, '🎁');
+                    else showToast(`+${p.coins.toLocaleString('ru-RU')} 💰 — ${p.kind === 'sub' ? 'бонус за подписку на Техноманию!' : (p.src && SRC_TEXT[p.src]) || 'подарок от администрации!'}`, '🎁');
                     try { if (p.code && typeof PromoUI !== 'undefined') PromoUI.onRedeemed(p.code); } catch (e) {}
-                    return done('ok', { coins: p.coins, kind: p.kind || null, code: p.code || null });
+                    return done('ok', { coins: p.coins, kind: p.kind || null, code: p.code || null, src: p.src || null });
                 }
                 const plates = p.numbers.map(makePlate);
                 inventory.unshift(...plates);       // подарок кладём даже сверх лимита 120
@@ -1887,7 +2246,7 @@
                 return done('ok', { numbers: plates.map(x => x.fullText) });
             }
 
-            return { run, verify };
+            return { run, verify, redeem };
         })();
 
     </script>
@@ -2142,7 +2501,8 @@
             TabBar.init();
             renderTechno();
             PromoUI.render();
-            TGApp.boot();
+            Feat.render();
+            Promise.resolve(TGApp.boot()).then(() => setTimeout(() => Feat.init(), 900));
         };
 
         function saveData() {
@@ -2467,7 +2827,7 @@
                         <div style="font-size:0.65rem; color:var(--muted);">~${item.val.realPriceRub.toLocaleString()} ₽</div>
                     </div>
                     <div class="inv-actions">
-                        <button onclick="sellFromInventory(${inventory.indexOf(item)})">Продать (+${item.val.sellCoins}💰)</button>
+                        <button onclick="sellFromInventory(${inventory.indexOf(item)})">Продать (+${item.val.sellCoins}💰)</button>${item.val.isRare && Feat.on() ? `<button class="inv-share" onclick="Feat.shareText('${item.fullText}')">📣</button>` : ''}
                     </div>
                 </div>
             `).join('');
@@ -2677,6 +3037,7 @@
         }
 
         function renderPlateCard(plate) {
+            try { Feat.renderPlate(plate); } catch (e) {}
             if (!plate) return;
             const mainEl = document.getElementById('plateMain');
             const regEl = document.getElementById('regionCode');
@@ -2812,6 +3173,7 @@
             renderPlateCard(currentPlate);
 
             if (!isInitial) {
+                try { Feat.onRoll(currentPlate); } catch (e) {}
                 history.unshift(currentPlate);
                 if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;   // старые удаляются автоматически
                 renderHistory();
@@ -2956,44 +3318,10 @@
             }
         }
 
-        function startAdModal() {
-            document.getElementById('adModal').classList.add('open');
-            document.getElementById('adCloseBtn').style.display = 'none';
-            document.getElementById('adClaimBtn').style.display = 'none';
-            adSecondsLeft = 30;
-            document.getElementById('adTimerText').textContent = `Осталось: ${adSecondsLeft} сек`;
-
-            if (adInterval) clearInterval(adInterval);
-            TGApp.setClosingConfirmation(true);
-            adInterval = setInterval(() => {
-                adSecondsLeft--;
-                if (adSecondsLeft <= 0) {
-                    clearInterval(adInterval);
-                    TGApp.setClosingConfirmation(false);
-                    TGApp.haptic('success');
-                    document.getElementById('adTimerText').textContent = 'Просмотр завершен!';
-                    document.getElementById('adCloseBtn').style.display = 'block';
-                    document.getElementById('adClaimBtn').style.display = 'block';
-                } else {
-                    document.getElementById('adTimerText').textContent = `Осталось: ${adSecondsLeft} сек`;
-                }
-            }, 1000);
-        }
-
-        function closeAdModal() {
-            if (adInterval) clearInterval(adInterval);
-            TGApp.setClosingConfirmation(false);
-            document.getElementById('adModal').classList.remove('open');
-        }
-
-        function claimAdReward() {
-            coins += 250;
-            updateCoinsDisplay();
-            AudioFX.playSell();
-            showToast('Награда получена: +250 💰!', '🎁');
-            closeAdModal();
-            saveData();
-        }
+        /* Бывшая «рекламная пауза»: теперь это товар дня Техномании (Feat), монеты выдаёт сервер бота. */
+        function startAdModal() { Feat.openTechno(); }
+        function closeAdModal() { closeModal('techModal'); }
+        function claimAdReward() { Feat.claimTechno(); }
 
         function showToast(text, icon = 'ℹ️') {
             const toast = document.getElementById('toast');
