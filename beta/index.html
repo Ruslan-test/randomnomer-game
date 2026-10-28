@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta name="x-build" content="beta-5">
+    <meta name="x-build" content="beta-6">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -977,6 +977,41 @@
         .mk-deal span { margin-left: auto; font-weight: 800; color: var(--coin, #fbbf24); }
         .mk-deal small { width: 100%; color: var(--muted); font-size: 0.7rem; }
         .mk-rules { margin-top: 14px; }
+
+        /* 📥 Авто-инвентарь */
+        .btn-autoinv {
+            grid-column: 1 / -1;
+            background: rgba(56, 189, 248, 0.13);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            font-size: 0.85rem;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-autoinv.active { background: #0ea5e9; color: white; }
+        .ai-region { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px;
+                     background: var(--card-inner); border: 1px solid var(--border); padding: 8px 10px 8px 14px; border-radius: 10px; }
+        .ai-region span { font-weight: bold; font-size: 0.85rem; white-space: nowrap; }
+        .ai-region select { flex: 1; min-width: 0; max-width: 60%; padding: 6px 8px; border-radius: 8px; font-size: 0.8rem;
+                            background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .ai-cap { margin-top: 12px; font-size: 0.8rem; font-weight: bold; color: var(--muted); text-align: center; }
+        .ai-cap.full { color: #f87171; }
+        /* низкие экраны: третья кнопка не должна выталкивать «Игру» за таб-бар */
+        @media (max-height: 700px) {
+            #tab-game .btn-auto, #tab-game .btn-autosell, #tab-game .btn-autoinv { padding: 5px 6px; font-size: 0.8rem; }
+            #autoInvBtn { padding: 4px 6px; }
+            #autoBtn, #autoSellBtn { line-height: 1.2; }
+        }
+        .ai-note { margin-top: 10px; font-size: 0.75rem; line-height: 1.4; color: var(--muted); padding: 8px 10px; border-radius: 10px;
+                   background: rgba(56, 189, 248, 0.08); border: 1px dashed rgba(56, 189, 248, 0.45); }
     </style>
 </head>
 <body>
@@ -1047,6 +1082,7 @@
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                 <button class="btn-auto" id="autoBtn" onclick="toggleAutoRoll()">⚡ Авто-крутка: 🔒 (3 000 💰)</button>
                 <button class="btn-autosell" id="autoSellBtn" onclick="openAutoSellModal()">💰 Авто-продажа: 🔒 (10 000 💰)</button>
+                <button class="btn-autoinv" id="autoInvBtn" onclick="AutoInv.open()">📥 Авто-инвентарь: 🔒 (15 000 💰)</button>
             </div>
 
             <div class="btn-group">
@@ -1159,7 +1195,7 @@
             <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
-            <span class="beta-tag" id="betaTag">ТЕСТ · b5</span>
+            <span class="beta-tag" id="betaTag">ТЕСТ · b6</span>
         </div>
     </nav>
 
@@ -1228,6 +1264,54 @@
         </div>
     </div>
 
+    <!-- Auto-Inventory Modal -->
+    <div class="modal-overlay" id="autoInvModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('autoInvModal')">✕</button>
+            <h2>📥 Авто-инвентарь</h2>
+            <p style="font-size:0.8rem; color:var(--muted); margin-top:4px;">Автоматически сохраняет выпавшие номера выбранных категорий в инвентарь — и при обычном прокруте, и во время авто-крутки.</p>
+
+            <div id="autoInvUnlockedContent" style="display:none; margin-top:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:var(--card-inner); padding:10px; border-radius:10px; border:1px solid var(--border);">
+                    <span style="font-size:0.9rem; font-weight:bold;">Включить авто-инвентарь:</span>
+                    <button id="toggleAutoInvStateBtn" onclick="AutoInv.toggle()" class="btn-auto" style="padding:6px 12px;">ВЫКЛ</button>
+                </div>
+
+                <label style="font-size:0.8rem; font-weight:bold; color:var(--text);">Добавлять в инвентарь автоматически:</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <span class="rarity-common" style="font-weight:bold; font-size:0.85rem;">Обычные номера</span>
+                        <input type="checkbox" id="invCommonCheck" onchange="AutoInv.updateFilters()">
+                    </label>
+                    <label class="checkbox-item">
+                        <span class="rarity-rare" style="font-weight:bold; font-size:0.85rem;">Редкие номера</span>
+                        <input type="checkbox" id="invRareCheck" onchange="AutoInv.updateFilters()">
+                    </label>
+                    <label class="checkbox-item">
+                        <span class="rarity-epic" style="font-weight:bold; font-size:0.85rem;">Эпические номера</span>
+                        <input type="checkbox" id="invEpicCheck" onchange="AutoInv.updateFilters()">
+                    </label>
+                    <label class="checkbox-item">
+                        <span class="rarity-legend" style="font-weight:bold; font-size:0.85rem;">Легендарные номера</span>
+                        <input type="checkbox" id="invLegendCheck" onchange="AutoInv.updateFilters()">
+                    </label>
+                </div>
+                <label class="ai-region">
+                    <span>📍 Всегда добавлять регион</span>
+                    <select id="invRegionSelect" onchange="AutoInv.updateFilters()"></select>
+                </label>
+                <div class="ai-cap" id="autoInvCap">📦 В инвентаре: 0/120</div>
+                <div class="ai-note">⚖️ Инвентарь важнее продажи: если номер подходит и под авто-продажу, он попадёт в инвентарь, а не будет продан. Если инвентарь полон, такой номер не продаётся, а авто-крутка останавливается.</div>
+            </div>
+
+            <div id="autoInvLockedContent" style="margin-top:20px; text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:10px;">🔒</div>
+                <div style="font-size:0.9rem; color:var(--muted); margin-bottom:16px;">Модуль авто-инвентаря заблокирован. Разблокируйте его навсегда!</div>
+                <button class="btn" id="autoInvBuyBtn" style="width:100%; background:linear-gradient(135deg, #0ea5e9, #0369a1);" onclick="AutoInv.buy()">Разблокировать за 15 000 💰</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Auto-Sell Modal -->
     <div class="modal-overlay" id="autoSellModal">
         <div class="modal">
@@ -1256,6 +1340,7 @@
                         <input type="checkbox" id="sellEpicCheck" onchange="updateAutoSellFilters()">
                     </label>
                 </div>
+                <div class="ai-note" id="autoSellInvNote">📥 Номера, которые выбраны в авто-инвентаре, не продаются — они сохраняются в инвентарь.</div>
             </div>
 
             <div id="autoSellLockedContent" style="margin-top:20px; text-align:center;">
@@ -1316,6 +1401,7 @@
             function getState() {
                 return { coins, luck, activeRegion, unlockedRegions, inventory, profile, achievements,
                          activeFrame, autoRollUnlocked, autoSellUnlocked, autoSellSettings, autoSellActive,
+                         autoInvUnlocked, autoInvActive, autoInvSettings,
                          history: historyPack() };
             }
             function applyState(s) {
@@ -1337,6 +1423,10 @@
                 autoSellUnlocked = !!s.autoSellUnlocked;
                 if (s.autoSellSettings && typeof s.autoSellSettings === 'object') autoSellSettings = s.autoSellSettings;
                 autoSellActive = !!s.autoSellActive;
+                // авто-инвентарь: в сохранениях старых версий ключей нет -> текущее значение не трогаем (покупку не теряем)
+                if (typeof s.autoInvUnlocked === 'boolean') autoInvUnlocked = s.autoInvUnlocked;
+                if (typeof s.autoInvActive === 'boolean') autoInvActive = s.autoInvActive;
+                if (s.autoInvSettings && typeof s.autoInvSettings === 'object') autoInvSettings = AutoInv.normalize(s.autoInvSettings);
                 if (Array.isArray(s.history)) setHistoryFromSave(s.history);   // старые сохранения без истории её не стирают
             }
             function refreshUI() {
@@ -2339,6 +2429,147 @@
                      _pick: i => priceAsk(Market._list[i]), _fee: fee, _list: [], _state: () => S };
         })();
 
+        /* ===== 📥 Авто-инвентарь (платная функция, по образцу авто-продажи) =====
+           Выпавший номер выбранной категории сразу кладётся в инвентарь (как кнопка «📦 В инвентарь»).
+           Приоритет выше авто-продажи: номер, который нужен авто-инвентарю, никогда не продаётся автоматически —
+           даже если инвентарь полон (тогда он остаётся на карточке и в истории, а авто-крутка останавливается). */
+        const AutoInv = (() => {
+            const PRICE = 15000;
+            const INV_MAX = 120;
+            const CATS = ['common', 'rare', 'epic', 'legend'];
+            const $ = (id) => document.getElementById(id);
+            const fmt = (n) => Number(n).toLocaleString('ru-RU');
+            let fullToastAt = 0;
+
+            function defaults() { return { common: false, rare: true, epic: true, legend: true, region: '' }; }
+            function validRegion(code) {
+                return typeof code === 'string' && code !== 'RANDOM' && ALL_REGIONS.some(r => r.code === code);
+            }
+            /* любые старые/битые настройки -> корректный объект (неизвестные поля отбрасываем) */
+            function normalize(s) {
+                const d = defaults();
+                if (!s || typeof s !== 'object' || Array.isArray(s)) return d;
+                CATS.forEach(k => { if (typeof s[k] === 'boolean') d[k] = s[k]; });
+                d.region = validRegion(s.region) ? s.region : '';
+                return d;
+            }
+            function category(plate) {
+                const v = plate && plate.val;
+                if (!v) return null;
+                return v.isLegend ? 'legend' : v.isEpic ? 'epic' : v.isRare ? 'rare' : 'common';
+            }
+            /* подходит ли номер под фильтры (без учёта места в инвентаре) */
+            function matches(plate) {
+                const c = category(plate);
+                if (!c) return false;
+                return !!autoInvSettings[c] || (!!autoInvSettings.region && plate.region === autoInvSettings.region);
+            }
+            /* номер «нужен» авто-инвентарю -> авто-продажа его не трогает */
+            function wants(plate) {
+                try { return !!(autoInvUnlocked && autoInvActive && plate && !plate.sold && matches(plate)); }
+                catch (e) { return false; }
+            }
+            function full() { return inventory.length >= INV_MAX; }
+
+            /* вызывается из generatePlate для каждого нового (не начального) номера, ДО авто-продажи */
+            function onRoll(plate) {
+                if (!wants(plate)) return false;
+                if (full()) {
+                    const stopped = typeof autoRollActive !== 'undefined' && autoRollActive;
+                    if (stopped) { try { toggleAutoRoll(); } catch (e) {} }
+                    const now = Date.now();
+                    if (stopped || now - fullToastAt > 4000) {
+                        fullToastAt = now;
+                        showToast(stopped ? `Инвентарь полон (${INV_MAX}/${INV_MAX})! Авто-крутка остановлена, номер не продан`
+                                          : `Инвентарь полон (${INV_MAX}/${INV_MAX}) — номер не добавлен`, '📦');
+                    }
+                    return false;
+                }
+                inventory.unshift({ ...plate });   // копия с sold:false — как при ручном сохранении
+                plate.sold = true;                  // на карточке/в истории — уже нельзя продать или добавить второй раз
+                updateInvCounter();
+                showToast(`Авто-инвентарь: ${plate.fullText} в инвентаре (${inventory.length}/${INV_MAX})`, '📥');
+                try { TGApp.haptic('light'); } catch (e) {}
+                return true;
+            }
+
+            function render() {
+                const btn = $('autoInvBtn');
+                if (!btn) return;
+                if (!autoInvUnlocked) {
+                    btn.textContent = `📥 Авто-инвентарь: 🔒 (${fmt(PRICE)} 💰)`;
+                    btn.classList.remove('active');
+                } else {
+                    btn.textContent = `📥 Авто-инвентарь: ${autoInvActive ? 'ВКЛ' : 'ВЫКЛ'}`;
+                    btn.classList.toggle('active', !!autoInvActive);
+                }
+            }
+            function renderModal() {
+                const locked = $('autoInvLockedContent'), unlocked = $('autoInvUnlockedContent');
+                if (!locked || !unlocked) return;
+                locked.style.display = autoInvUnlocked ? 'none' : 'block';
+                unlocked.style.display = autoInvUnlocked ? 'block' : 'none';
+                if (!autoInvUnlocked) return;
+                $('invCommonCheck').checked = !!autoInvSettings.common;
+                $('invRareCheck').checked = !!autoInvSettings.rare;
+                $('invEpicCheck').checked = !!autoInvSettings.epic;
+                $('invLegendCheck').checked = !!autoInvSettings.legend;
+                const sel = $('invRegionSelect');
+                if (sel && !sel.options.length) {
+                    sel.innerHTML = '<option value="">— нет —</option>' + ALL_REGIONS.filter(r => r.code !== 'RANDOM')
+                        .map(r => `<option value="${r.code}">${r.code} · ${r.name}</option>`).join('');
+                }
+                if (sel) sel.value = autoInvSettings.region || '';
+                const st = $('toggleAutoInvStateBtn');
+                st.textContent = autoInvActive ? 'ВКЛ' : 'ВЫКЛ';
+                st.className = autoInvActive ? 'btn-auto active' : 'btn-auto';
+                const cap = $('autoInvCap');
+                if (cap) {
+                    cap.textContent = full() ? `📦 Инвентарь полон: ${inventory.length}/${INV_MAX} — освободи место, иначе номера не сохранятся`
+                                             : `📦 В инвентаре: ${inventory.length}/${INV_MAX}`;
+                    cap.classList.toggle('full', full());
+                }
+            }
+            function open() { renderModal(); openModal('autoInvModal'); }
+
+            function buy() {
+                if (autoInvUnlocked) { renderModal(); return; }          // повторное нажатие не списывает монеты
+                if (!Number.isFinite(coins) || coins < PRICE) {
+                    showToast(`Нужно ${fmt(PRICE)} 💰 для покупки авто-инвентаря!`, '🔒');
+                    return;
+                }
+                coins -= PRICE;
+                autoInvUnlocked = true;
+                autoInvActive = true;
+                autoInvSettings = normalize(autoInvSettings);
+                updateCoinsDisplay();
+                render();
+                AudioFX.playSell();
+                showToast('Авто-инвентарь разблокирован!', '🎉');
+                saveData();
+                try { TGApp.saveNow(); } catch (e) {}                 // покупку сразу в облако
+                renderModal();
+            }
+            function toggle() {
+                if (!autoInvUnlocked) return;
+                autoInvActive = !autoInvActive;
+                saveData();
+                renderModal();
+                render();
+            }
+            function updateFilters() {
+                if (!autoInvUnlocked) return;
+                const s = normalize({
+                    common: $('invCommonCheck').checked, rare: $('invRareCheck').checked,
+                    epic: $('invEpicCheck').checked, legend: $('invLegendCheck').checked,
+                    region: ($('invRegionSelect') || {}).value || '',
+                });
+                autoInvSettings = s;
+                saveData();
+            }
+            return { PRICE, INV_MAX, open, buy, toggle, updateFilters, render, renderModal, onRoll, wants, matches, normalize, defaults };
+        })();
+
         const GrantRedeemer = (() => {
             const PUBKEY_B64 = 'BDTtd+5fagn7Fe7OTlTYbuab2Zxr5EL02DuhhDT87zpKZHhnaaGhRYJA/HTeRx4bPkQQKLTO1/j9uocrQyfwbAg=';    // открытый ключ P-256, несжатая точка (65 байт)
             const PLATE_RE = /^([АВЕКМНОРСТУХ])(\d{3})([АВЕКМНОРСТУХ])([АВЕКМНОРСТУХ]) (\d{2,3})$/;
@@ -2793,6 +3024,10 @@
             epic: false
         };
 
+        let autoInvUnlocked = false;
+        let autoInvActive = false;
+        let autoInvSettings = { common: false, rare: true, epic: true, legend: true, region: '' };
+
         let activeFrame = 'standard';
         let adSecondsLeft = 30;
         let adInterval = null;
@@ -2855,6 +3090,9 @@
                 localStorage.setItem('plateAutoSellUnlocked_v3', JSON.stringify(autoSellUnlocked));
                 localStorage.setItem('plateAutoSellSettings_v3', JSON.stringify(autoSellSettings));
                 localStorage.setItem('plateAutoSellActive_v3', JSON.stringify(autoSellActive));
+                localStorage.setItem('plateAutoInvUnlocked_v3', JSON.stringify(autoInvUnlocked));
+                localStorage.setItem('plateAutoInvActive_v3', JSON.stringify(autoInvActive));
+                localStorage.setItem('plateAutoInvSettings_v3', JSON.stringify(autoInvSettings));
                 localStorage.setItem('plateHistory_v3', JSON.stringify(historyPack()));
                 localStorage.setItem('plateMeta_v3', JSON.stringify({ ts: Date.now(), uid: TGApp.userId() }));
             } catch(e){}
@@ -2894,6 +3132,14 @@
                 if (ass) autoSellSettings = JSON.parse(ass);
                 const asa = localStorage.getItem('plateAutoSellActive_v3');
                 if (asa) autoSellActive = JSON.parse(asa);
+                try {   // отдельный try: битое значение не мешает загрузке остального (истории и т.д.)
+                    const aiu = localStorage.getItem('plateAutoInvUnlocked_v3');
+                    if (aiu) autoInvUnlocked = JSON.parse(aiu) === true;
+                    const aia = localStorage.getItem('plateAutoInvActive_v3');
+                    if (aia) autoInvActive = JSON.parse(aia) === true;
+                    const ais = localStorage.getItem('plateAutoInvSettings_v3');
+                    if (ais) autoInvSettings = AutoInv.normalize(JSON.parse(ais));
+                } catch (e) {}
                 const hs = localStorage.getItem('plateHistory_v3');
                 if (hs) history = historyUnpack(JSON.parse(hs));
             } catch(e){}
@@ -3491,7 +3737,9 @@
                 updateLuckUI();
             }
 
-            if (!isInitial && autoSellUnlocked && autoSellActive) {
+            if (!isInitial) { try { AutoInv.onRoll(currentPlate); } catch (e) { console.warn('AutoInv', e); } }
+
+            if (!isInitial && autoSellUnlocked && autoSellActive && !currentPlate.sold && !AutoInv.wants(currentPlate)) {
                 let shouldSell = false;
                 if (val.rarity === 'Обычный' && autoSellSettings.common) shouldSell = true;
                 if (val.rarity.includes('Редкий') && autoSellSettings.rare) shouldSell = true;
@@ -3632,6 +3880,7 @@
         }
 
         function updatePaidFeaturesUI() {
+            try { AutoInv.render(); } catch (e) {}
             const autoBtn = document.getElementById('autoBtn');
             if (autoBtn) {
                 if (!autoRollUnlocked) {
