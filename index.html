@@ -3570,6 +3570,8 @@
             const isMirror = (d[0] === d[2] && d[0] !== d[1]);
             const is00X = (d.startsWith('00'));
             const isSpecialReg = (region === '777' || region === '999' || region === '95' || region === '77');
+            const nzDigits = String(d).replace(/0/g, '');
+            const isOneDigit = nzDigits.length > 0 && nzDigits.split('').every(c => c === nzDigits[0]);   // 777, 700, 007, 707...
 
             let rarity = 'Обычный';
             let rarityClass = 'rarity-common';
@@ -3577,7 +3579,7 @@
             let realPriceRub = 5000;
             let isRare = false, isEpic = false, isLegend = false;
 
-            if (isTripleDigits && allLettersSame) {
+            if (isOneDigit && allLettersSame) {
                 isLegend = true;
                 rarity = 'Легендарный ✨';
                 rarityClass = 'rarity-legend';
@@ -3697,6 +3699,7 @@
                 const rareTypes = ['001', '777', '007', '111', '555', '999'];
                 d = rareTypes[Math.floor(Math.random() * rareTypes.length)];
                 l2 = l1;
+                { const l3opts = LETTERS.filter(x => x !== l1); l3 = l3opts[Math.floor(Math.random() * l3opts.length)]; }   // гарант: без легенды
                 showToast('Сработал Гарант Удачи! ✨', '🍀');
             }
 
@@ -3721,7 +3724,7 @@
                 } else if (val.isRare) {
                     profile.stats.rares++;
                     if (!isGuaranteed) {
-                        luck = Math.max(0, luck - 20);
+                        luck = Math.max(0, luck - 14);
                     }
                     AudioFX.playWin(false);
                 } else {
