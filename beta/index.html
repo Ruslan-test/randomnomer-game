@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🚗%3C/text%3E%3C/svg%3E">
     <meta name="format-detection" content="telephone=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <meta name="x-build" content="beta-6">
+    <meta name="x-build" content="beta-7">
     <title>Номерной Рандомайзер</title>
     <style>
         :root {
@@ -1195,7 +1195,7 @@
             <button class="tab-btn" data-tab="shop" id="tabBtn-shop" role="tab" aria-selected="false" onclick="TabBar.go('shop')"><span class="ti">🛒</span><span>Магазин</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="bonus" id="tabBtn-bonus" role="tab" aria-selected="false" onclick="TabBar.go('bonus')"><span class="ti">🎁</span><span>Бонусы</span><span class="tab-dot"></span></button>
             <button class="tab-btn" data-tab="profile" id="tabBtn-profile" role="tab" aria-selected="false" onclick="TabBar.go('profile')"><span class="ti">👤</span><span>Профиль</span><span class="tab-dot"></span></button>
-            <span class="beta-tag" id="betaTag">ТЕСТ · b6</span>
+            <span class="beta-tag" id="betaTag">ТЕСТ · b7</span>
         </div>
     </nav>
 
@@ -3577,6 +3577,8 @@
             const isMirror = (d[0] === d[2] && d[0] !== d[1]);
             const is00X = (d.startsWith('00'));
             const isSpecialReg = (region === '777' || region === '999' || region === '95' || region === '77');
+            const nzDigits = String(d).replace(/0/g, '');
+            const isOneDigit = nzDigits.length > 0 && nzDigits.split('').every(c => c === nzDigits[0]);   // 777, 700, 007, 707...
 
             let rarity = 'Обычный';
             let rarityClass = 'rarity-common';
@@ -3584,7 +3586,7 @@
             let realPriceRub = 5000;
             let isRare = false, isEpic = false, isLegend = false;
 
-            if (isTripleDigits && allLettersSame) {
+            if (isOneDigit && allLettersSame) {
                 isLegend = true;
                 rarity = 'Легендарный ✨';
                 rarityClass = 'rarity-legend';
@@ -3704,6 +3706,7 @@
                 const rareTypes = ['001', '777', '007', '111', '555', '999'];
                 d = rareTypes[Math.floor(Math.random() * rareTypes.length)];
                 l2 = l1;
+                { const l3opts = LETTERS.filter(x => x !== l1); l3 = l3opts[Math.floor(Math.random() * l3opts.length)]; }   // гарант: без легенды
                 showToast('Сработал Гарант Удачи! ✨', '🍀');
             }
 
@@ -3728,7 +3731,7 @@
                 } else if (val.isRare) {
                     profile.stats.rares++;
                     if (!isGuaranteed) {
-                        luck = Math.max(0, luck - 20);
+                        luck = Math.max(0, luck - 14);
                     }
                     AudioFX.playWin(false);
                 } else {
